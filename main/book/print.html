@@ -249,7 +249,7 @@ your local machine through <a href="installation.html#cargo">Cargo</a>.</p>
 <dl>
   <dt><strong>Source / Method</strong></dt>
   <dd>
-<pre><code>us-docker.pkg.dev/quilkin/release/quilkin:0.7.0-dev-c15fd53
+<pre><code>us-docker.pkg.dev/quilkin/release/quilkin:0.8.0-dev-aeb2871
 </code></pre>
 </dd>
   <dt><strong>Notes</strong></dt>
@@ -676,7 +676,7 @@ routing token <code>456</code> from before, to ensure our traffic gets routed to
 <p>Run <code>kubectl get service quilkin-proxies</code> to get the <code>EXTERNAL-IP</code> of the Service you created.</p>
 <pre><code class="language-shell">$ kubectl get service quilkin-proxies
 NAME              TYPE           CLUSTER-IP    EXTERNAL-IP     PORT(S)          AGE
-quilkin-proxies   LoadBalancer   10.109.0.12   35.246.94.14    7000:30174/UDP   3h22m
+quilkin-proxies   LoadBalancer   10.109.0.12   35.246.94.14    7777:30174/UDP   3h22m
 </code></pre>
 <p>We have a <a href="https://github.com/googleforgames/quilkin/blob/main/examples/agones-xonotic-xds/client-token.yaml">Quilkin config yaml</a>
 file all ready for you, that is configured to append the routing token <code>456</code> to each
@@ -932,7 +932,7 @@ routing token <code>456</code> from before, to ensure our traffic gets routed to
 <p>Run <code>kubectl get service quilkin-proxies</code> to get the <code>EXTERNAL-IP</code> of the Service you created. </p>
 <pre><code class="language-shell">$ kubectl get service quilkin-proxies
 NAME              TYPE           CLUSTER-IP    EXTERNAL-IP     PORT(S)          AGE
-quilkin-proxies   LoadBalancer   10.109.0.12   35.246.94.14    7000:30174/UDP   3h22m
+quilkin-proxies   LoadBalancer   10.109.0.12   35.246.94.14    7777:30174/UDP   3h22m
 </code></pre>
 <p>We have a <a href="https://github.com/googleforgames/quilkin/blob/main/examples/agones-xonotic-relay/client-token.yaml">Quilkin config yaml</a>
 file all ready for you, that is configured to append the routing token <code>456</code> to each 
@@ -1200,7 +1200,7 @@ clusters:
 <h2 id="filter-dynamic-metadata"><a class="header" href="#filter-dynamic-metadata">Filter Dynamic Metadata</a></h2>
 <p>A filter within the filter chain can share data within another filter further along in the filter chain by propagating the desired data alongside the packet being processed.
 This enables sharing dynamic information at runtime, e.g information about the current packet that might be useful to other filters that process that packet.</p>
-<p>At packet processing time each packet is associated with <em>filter dynamic metadata</em> (a set of key-value pairs). Each key is a unique string while its value is an associated <a href="services/proxy/../../../api/quilkin/metadata/enum.Value.html"><code>quilkin::metadata::Value</code></a>.
+<p>At packet processing time each packet is associated with <em>filter dynamic metadata</em> (a set of key-value pairs). Each key is a unique string while its value is an associated <a href="services/proxy/../../../api/quilkin/net/endpoint/metadata/enum.Value.html"><code>quilkin::metadata::Value</code></a>.
 When a filter processes a packet, it can choose to consult the associated dynamic metadata for more information or itself add/update or remove key-values from the set.</p>
 <p>As an example, the built-in [CaptureBytes] filter is one such filter that populates a packet's filter metadata.
 [CaptureBytes] extracts information (a configurable byte sequence) from each packet and appends it to the packet's dynamic metadata for other filters to leverage.
@@ -2202,7 +2202,7 @@ async fn main() -&gt; quilkin::Result&lt;()&gt; {
     ));
     config.clusters.modify(|map| {
         map.insert_default(
-            [quilkin::endpoint::Endpoint::new(
+            [quilkin::net::endpoint::Endpoint::new(
                 (std::net::Ipv4Addr::LOCALHOST, 4321).into(),
             )]
             .into(),
@@ -3043,7 +3043,8 @@ a list of the criteria for each service an provider.</p>
 <tr><td>Relay</td><td>Provider is ready</td></tr>
 <tr><td>Agent</td><td>Provider is ready AND connected to relay</td></tr>
 </tbody></table>
-</div><div class="table-wrapper"><table><thead><tr><th>Provider</th><th>Readiness</th></tr></thead><tbody>
+</div><br/>
+<div class="table-wrapper"><table><thead><tr><th>Provider</th><th>Readiness</th></tr></thead><tbody>
 <tr><td>Agones</td><td>The service is connected to kube-api</td></tr>
 <tr><td>File</td><td>The service has found and watches the file</td></tr>
 </tbody></table>
