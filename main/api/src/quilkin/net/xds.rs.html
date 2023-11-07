@@ -537,7 +537,7 @@
             <span class="kw">crate</span>::test::map_to_localhost(<span class="kw-2">&amp;mut </span>addr.address).<span class="kw">await</span>;
             addr
         };
-        <span class="kw">let </span>clusters = <span class="kw">crate</span>::cluster::ClusterMap::default();
+        <span class="kw">let </span>clusters = <span class="kw">crate</span>::net::cluster::ClusterMap::default();
 
         <span class="macro">tracing::debug!</span>(<span class="question-mark">?</span>address);
         clusters.insert_default([address].into());
@@ -673,7 +673,7 @@
         tokio::spawn(server::spawn(<span class="number">23456</span>, config.clone()));
         <span class="kw">let </span>client = Client::connect(
             <span class="string">&quot;test-client&quot;</span>.into(),
-            <span class="kw">crate</span>::cli::Admin::Manage(&lt;<span class="kw">_</span>&gt;::default()),
+            <span class="kw">crate</span>::cli::Admin::Proxy(&lt;<span class="kw">_</span>&gt;::default()),
             <span class="macro">vec!</span>[<span class="string">&quot;http://127.0.0.1:23456&quot;</span>.try_into().unwrap()],
         )
         .<span class="kw">await
