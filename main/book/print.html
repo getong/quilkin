@@ -251,7 +251,7 @@ your local machine through <a href="installation.html#cargo">Cargo</a>.</p>
 <dl>
   <dt><strong>Source / Method</strong></dt>
   <dd>
-<pre><code>us-docker.pkg.dev/quilkin/release/quilkin:0.8.0-dev-7bc119a
+<pre><code>us-docker.pkg.dev/quilkin/release/quilkin:0.8.0-dev-713c135
 </code></pre>
   </dd>
   <dt><strong>Notes</strong></dt>
@@ -3064,7 +3064,7 @@ panicked quilkin is considered live.</p>
 there will be different criteria for a service to be considered ready. Here's
 a list of the criteria for each service an provider.</p>
 <div class="table-wrapper"><table><thead><tr><th>Service</th><th>Readiness</th></tr></thead><tbody>
-<tr><td>Proxy</td><td>Management server is connected (or always true if config is static)  AND if there is more than one endpoint configured</td></tr>
+<tr><td>Proxy</td><td>Management server is connected (or always true if config is static)  OR if there is more than one endpoint configured</td></tr>
 <tr><td>Manage</td><td>Provider is ready</td></tr>
 <tr><td>Relay</td><td>Provider is ready</td></tr>
 <tr><td>Agent</td><td>Provider is ready AND connected to relay</td></tr>
