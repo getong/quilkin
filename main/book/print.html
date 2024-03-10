@@ -251,7 +251,7 @@ your local machine through <a href="installation.html#cargo">Cargo</a>.</p>
 <dl>
   <dt><strong>Source / Method</strong></dt>
   <dd>
-<pre><code>us-docker.pkg.dev/quilkin/release/quilkin:0.8.0-dev-f81b843
+<pre><code>us-docker.pkg.dev/quilkin/release/quilkin:0.8.0-dev-db791ed
 </code></pre>
   </dd>
   <dt><strong>Notes</strong></dt>
@@ -2347,19 +2347,12 @@ bytes = "1.0"
 prost-build = "0.7"
 </code></pre>
 <pre><code class="language-rust no_run noplayground ignore">// src/build.rs
-fn main() {
-    // Remove if you already have `protoc` installed in your system.
-    std::env::set_var("PROTOC", protobuf_src::protoc());
-
-    prost_build::compile_protos(&amp;["src/greet.proto"], &amp;["src/"]).unwrap();
-}</code></pre>
+{{#include ../../../../../examples/quilkin-filter-example/build.rs:build}}</code></pre>
 <p>To include the generated code, we'll use [<code>tonic::include_proto</code>], then we just
 need to implement <a href="https://doc.rust-lang.org/std/convert/trait.TryFrom.html">std::convert::TryFrom</a> for converting the protobuf message to
 equivalvent configuration.</p>
 <pre><code class="language-rust no_run noplayground ignore">// src/main.rs
-mod proto {
-    tonic::include_proto!("greet");
-}
+
 
 impl TryFrom&lt;proto::Greet&gt; for Config {
     type Error = ConvertProtoConfigError;
@@ -2408,13 +2401,13 @@ endpoints:
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="quilkin-control-message-protocol-qcmp"><a class="header" href="#quilkin-control-message-protocol-qcmp">Quilkin Control Message Protocol (QCMP)</a></h1>
 <div class="table-wrapper"><table><thead><tr><th>services</th><th>ports</th><th>Protocol</th></tr></thead><tbody>
-<tr><td>QCMP</td><td>7600</td><td>UDP (IPv4 OR IPv6)</td></tr>
+<tr><td>QCMP</td><td>7600</td><td>UDP AND TCP (IPv4 OR IPv6)</td></tr>
 </tbody></table>
 </div>
 <p>In addition to the TCP based administration API, Quilkin provides a meta API
-over UDP. The purpose of this API is to provide meta operations that can be
-used by untrusted clients. Currently the API is focuses on providing pings for
-latency measurement but that may change overtime as new features are added.</p>
+over UDP and TCP. The purpose of this API is to provide meta operations that can
+be used by untrusted clients. Currently the API is focuses on providing pings
+for latency measurement but that may change overtime as new features are added.</p>
 <h2 id="ping"><a class="header" href="#ping">Ping</a></h2>
 <p>The main functionality currently in QCMP is pinging, measuring the latency from
 one service to another over UDP. You can also measure the distance locally using
@@ -2471,6 +2464,33 @@ types:
       - id: server_sent_timestamp
         type: u8
 </code></pre>
+<h2 id="datacenter-latency"><a class="header" href="#datacenter-latency">Datacenter Latency</a></h2>
+<p>In addition to being able to ping Quilkin to get the latency between the client
+and proxy. In order to allow clients to send information to services like a
+matchmaker about which datacentre they are closest to, Quilkin also includes
+the ability to get a proxy's latency to each of its connected datacentres.</p>
+<blockquote>
+<p>Note: This requires a multi-cluster relay setup, as when you set up proxies
+in the same cluster as gameservers, this measurement is redundant.</p>
+</blockquote>
+<p>All that is required to set this up is to provide an ICAO code to the agent in
+the gameserver cluster. (E.g. through the environment variable <code>ICAO_CODE</code>).
+No further setup is required. <strong>You can use duplicate ICAO codes</strong>, Quilkin will
+choose the best result amongst the duplicates to return. Quilkin assumes that
+multiple of the same ICAO code refer to the same phyiscal datacentre, so latency
+between them should negible.</p>
+<blockquote>
+<p>Why ICAO? ICAO is an international standard for airport codes, airport codes
+are an easy human readable code that makes it easy to use geo-visualisations
+in tools like Grafana, and easily allows grouping. IATA codes only cover
+major airports, ICAO codes cover practically every airport making them easy to
+more accurately represent the location of any datacentre.</p>
+</blockquote>
+<h3 id="api-and-schema"><a class="header" href="#api-and-schema">API And Schema</a></h3>
+<p>Currently the datacentre latency can be retrieved by sending a <code>GET /</code> HTTP
+request to the QCMP port.</p>
+<p>The returned data is a JSON object with each key being the ICAO code for the
+datacentre, and the value being the latency in nanoseconds.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="proxy-metrics"><a class="header" href="#proxy-metrics">Proxy Metrics</a></h1>
 <p>The following are metrics that Quilkin provides while in Proxy Mode.</p>
 <h1 id="asn-maxmind-information"><a class="header" href="#asn-maxmind-information">ASN Maxmind Information</a></h1>
@@ -2958,11 +2978,6 @@ proxies that make use of that data to decide where and how to send packets.</p>
 <tr><td>QCMP</td><td>7600</td><td>UDP(IPv4 OR IPv6)</td></tr>
 </tbody></table>
 </div>
-<blockquote>
-<p><strong>Note:</strong> This service is currently in active experimentation and development
-so there may be bugs which cause it to be unusable  for production, as always
-all bug reports are welcome and appreciated.</p>
-</blockquote>
 <p>For multi-cluster integration, Quilkin provides a <code>agent</code> service, that can be
 deployed to a cluster to act as a beacon for QCMP pings and forward cluster
 configuration information to a <code>relay</code> service</p>
@@ -2992,6 +3007,8 @@ Options:
           The `sub_zone` in the `zone` in the `region` to set in the cluster map for any provider endpoints discovered [env: QUILKIN_SUB_ZONE=]
       --idle-request-interval-secs &lt;IDLE_REQUEST_INTERVAL_SECS&gt;
           The interval in seconds at which the agent will wait for a discovery request from a relay server before restarting the connection [env: QUILKIN_IDLE_REQUEST_INTERVAL_SECS=] [default: 30]
+  -i, --icao-code &lt;ICAO_CODE&gt;
+          The ICAO code for the agent [env: ICAO_CODE=] [default: XXXX]
   -h, --help
           Print help
 </code></pre>
@@ -3019,12 +3036,38 @@ curl localhost:8001/config
 curl localhost:8000/config
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="quilkin-unreal-engine-plugin"><a class="header" href="#quilkin-unreal-engine-plugin">Quilkin Unreal Engine Plugin</a></h1>
-<p>This is an alpha version of the Unreal Engine plugin for Quilkin. Currently it only supports adding a routing token in the following format.</p>
+<p>This is an unreal engine 5 plugin for Quilkin, a UDP proxy for gameservers. The plugin provides several features that you can use with Quilkin deployments, such as proxying game traffic, and latency measurement.</p>
+<p>You can also find guide level documentation on how the proxy works in the <a href="https://googleforgames.github.io/quilkin/main/book/">Quilkin Book</a>.</p>
+<h3 id="installation-1"><a class="header" href="#installation-1">Installation</a></h3>
+<p>Copy this plugin to your <code>Plugins</code> folder in your <code>Engine</code> directory.</p>
+<h3 id="configuration-3"><a class="header" href="#configuration-3">Configuration</a></h3>
+<p>Static configuration is available in the editor through <code>UQuilkinDeveloperSettings</code> in "Project Settings".</p>
+<p>Dynamic configuration is available through <code>UQuilkinConfigSubsystem</code>, it is initialised from the settings provided in <code>UQuilkinDeveloperSettings</code>, but can also be updated in code, and users can bind individual properties to delegates allowing them to dynamically set based on custom logic.</p>
+<ul>
+<li><code>bool Enabled</code> Whether the plugin will attach a versioned routing token to UDP packets to allow load balancers forward traffic to the correct gameserver. This also requires the address the clients connect to be a Quilkin load balancer, if connected directly to a gameserver the client will be rejected.</li>
+<li><code>bool EnabledInPie</code> By default <code>Enabled</code> is disabled in editor to prevent interfering with local clients and gameservers, you can override this behaviour by also enabling <code>EnabledInPie</code>.</li>
+<li><code>TArray&lt;uint8&gt; RoutingToken</code> The routing token representing the gameserver a client wants to reach, the token <strong>must</strong> be 16 bytes exactly. Currently the plugin only supports using <code>Enabled</code> with a routing token to create the following layout. It is assumed that the routing token would come from an external service, such as a matchmaking system.</li>
+</ul>
 <pre><code>&lt;packet&gt; | token    | version
-X bytes  | 16 bytes | 1 bytes
+ X bytes | 16 bytes | 1 byte
 </code></pre>
-<h2 id="how-to-install"><a class="header" href="#how-to-install">How to install</a></h2>
-<p>To get this client proxy installed, the SDK should be located in <code>Engine</code> path for Plugins, so copy the whole <code>ue4</code> folder (resides under <code>sdks</code> folder) in your Unreal Engine path <code>/[UE4 Root]/Engine/Plugins</code>, then you may want to rename the ue4 folder to <code>Quilkin</code>. Unreal Engine will automatically discover the plugin by searching for <code>.uplugin</code> file.</p>
+<ul>
+<li><code>TArray&lt;FQuilkinEndpoint&gt; Endpoints</code> A set of Quilkin load balancer endpoints that can be used for the following features.</li>
+<li><code>bool MeasureEndpoints</code> When enabled, the plugin will start a new <code>Tick</code> task that executes at a fixed interval (currently 30 seconds), where it will spawn a new background task that will ping each endpoint in <code>Endpoints</code>, and track its measurement in a fixed size circular buffer.
+Pings are handled through Quilkin Control Message Protocol, this is a bespoke protocol for UDP to be able to support situations where for example using ICMP is not possible, see the <a href="https://googleforgames.github.io/quilkin/main/book/services/proxy/qcmp.html">Quilkin Book</a> for more details on the protocol data unit.
+<strong>Note</strong> <code>MeasureEndpoints</code> is orthogonal to <code>Enabled</code> and <code>UseEndpoints</code> meaning that you can use <code>MeasureEndpoints</code> for latency measurements without being required to also use Quilkin for game traffic.</li>
+<li><code>bool UseEndpoints</code> Whether to use <code>Endpoints</code> for game traffic. When enabled, instead of using the provided <code>FInternetAddr</code>, the plugin will choose the lowest latency endpoint available and send traffic through that endpoint to connect to the gameserver, and if the latency should exceed <code>JitterThreshold</code> then the plugin will attempt to redirect traffic to the next available endpoint with the lowest latency.</li>
+</ul>
+<h3 id="delegates"><a class="header" href="#delegates">Delegates</a></h3>
+<p>Quilkin exposes a number of delegates to be able to access certain information, they can be accessed through the <code>FQuilkinDelegates</code> class.</p>
+<ul>
+<li>
+<p><code>GetQuilkinEndpointMeasurements</code> returns <code>TArray&lt;EndpointPair&gt;</code> representing each endpoint set in <code>Endpoints</code> with their median latency. The array will be empty if no endpoints have been set and <code>MeasureEndpoints</code> is not enabled.</p>
+</li>
+<li>
+<p><code>GetLowestLatencyEndpoint</code> returns <code>TOptional&lt;EndpointPair&gt;</code> is a specialisation of <code>GetQuilkinEndpointMeasurements</code> returning the lowest latency endpoint and its median latency. The delegate will return <code>None</code> if the array is empty and <code>MeasureEndpoints</code> is not enabled.</p>
+</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="administration"><a class="header" href="#administration">Administration</a></h1>
 <div class="table-wrapper"><table><thead><tr><th>services</th><th>ports</th><th>Protocol</th></tr></thead><tbody>
 <tr><td>Administration</td><td>8000</td><td>HTTP (IPv4 OR IPv6)</td></tr>
