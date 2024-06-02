@@ -426,17 +426,6 @@
 <a href="#424" id="424">424</a>
 <a href="#425" id="425">425</a>
 <a href="#426" id="426">426</a>
-<a href="#427" id="427">427</a>
-<a href="#428" id="428">428</a>
-<a href="#429" id="429">429</a>
-<a href="#430" id="430">430</a>
-<a href="#431" id="431">431</a>
-<a href="#432" id="432">432</a>
-<a href="#433" id="433">433</a>
-<a href="#434" id="434">434</a>
-<a href="#435" id="435">435</a>
-<a href="#436" id="436">436</a>
-<a href="#437" id="437">437</a>
 </pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2022 Google LLC
  *
@@ -468,7 +457,12 @@
                     <span class="kw">match </span>tokio_uring::Runtime::new(<span class="kw-2">&amp;</span>tokio_uring::builder().entries(<span class="number">2048</span>)) {
                         <span class="prelude-val">Ok</span>(runtime) =&gt; {
                             <span class="kw">let _ </span>= tx.send(<span class="prelude-val">Ok</span>(()));
-                            runtime.block_on(<span class="macro-nonterminal">$future</span>.instrument(<span class="macro-nonterminal">$span</span>));
+
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(span) = <span class="macro-nonterminal">$span </span>{
+                                runtime.block_on(<span class="macro-nonterminal">$future</span>.instrument(span));
+                            } <span class="kw">else </span>{
+                                runtime.block_on(<span class="macro-nonterminal">$future</span>);
+                            }
                         }
                         <span class="prelude-val">Err</span>(error) =&gt; {
                             <span class="kw">let _ </span>= tx.send(<span class="prelude-val">Err</span>(error.into()));
@@ -477,10 +471,17 @@
                 }).expect(<span class="string">"failed to spawn io-uring thread"</span>);
             } <span class="kw">else </span>{
                 <span class="kw">use </span>tracing::instrument::WithSubscriber <span class="kw">as _</span>;
-                tokio::spawn(<span class="kw">async move </span>{
+
+                <span class="kw">let </span>fut = <span class="kw">async move </span>{
                     <span class="kw">let _ </span>= tx.send(<span class="prelude-val">Ok</span>(()));
                     <span class="macro-nonterminal">$future</span>.<span class="kw">await
-                </span>}.instrument(<span class="macro-nonterminal">$span</span>).with_current_subscriber());
+                </span>};
+
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(span) = <span class="macro-nonterminal">$span </span>{
+                    tokio::spawn(fut.instrument(span).with_current_subscriber());
+                } <span class="kw">else </span>{
+                    tokio::spawn(fut.with_current_subscriber());
+                }
             }
         }
         rx
@@ -500,11 +501,28 @@
     };
 }
 
+<span class="doccomment">/// Allows creation of spans only when debug_assertions are enabled, to avoid
+/// hitting the cap of 4096 threads that is unconfigurable in tracing_subscriber -&gt; sharded_slab
+/// for span ids
+</span><span class="macro">macro_rules! </span>uring_span {
+    (<span class="macro-nonterminal">$span</span>:expr) =&gt; {{
+        <span class="macro">cfg_if::cfg_if! </span>{
+            <span class="kw">if </span><span class="attr">#[cfg(debug_assertions)] </span>{
+                <span class="prelude-val">Some</span>(<span class="macro-nonterminal">$span</span>)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>}
+        }
+    }};
+}
+
 <span class="kw">pub mod </span>cluster;
 <span class="kw">pub mod </span>endpoint;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>maxmind_db;
 <span class="kw">pub mod </span>phoenix;
-<span class="kw">pub mod </span>xds;
+
+<span class="kw">pub use </span>xds;
+<span class="kw">pub use </span>xds::net::TcpListener;
 
 <span class="kw">use </span>std::{
     io,
@@ -738,46 +756,6 @@
     ) -&gt; io::Result&lt;usize&gt; {
         <span class="self">self</span>.socket.send_to(buf, target).<span class="kw">await
     </span>}
-}
-
-<span class="doccomment">/// TCP listener for a GRPC service, always binds to the local IPv6 address
-</span><span class="kw">pub struct </span>TcpListener {
-    inner: std::net::TcpListener,
-}
-
-<span class="kw">impl </span>TcpListener {
-    <span class="doccomment">/// Binds a TCP listener, if `None` is passed, binds to an ephemeral port
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>bind(port: <span class="prelude-ty">Option</span>&lt;u16&gt;) -&gt; io::Result&lt;<span class="self">Self</span>&gt; {
-        std::net::TcpListener::bind((std::net::Ipv6Addr::UNSPECIFIED, port.unwrap_or_default()))
-            .map(|inner| <span class="self">Self </span>{ inner })
-    }
-
-    <span class="doccomment">/// Retrieves the port the listener is bound to
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>port(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u16 {
-        <span class="self">self</span>.inner.local_addr().expect(<span class="string">"failed to bind"</span>).port()
-    }
-
-    <span class="doccomment">/// Retrieves the local address the listener is bound to
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>local_addr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SocketAddr {
-        <span class="self">self</span>.inner.local_addr().expect(<span class="string">"failed to bind"</span>)
-    }
-
-    <span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>into_stream(<span class="self">self</span>) -&gt; io::Result&lt;tokio_stream::wrappers::TcpListenerStream&gt; {
-        <span class="self">self</span>.inner.set_nonblocking(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>tl = tokio::net::TcpListener::from_std(<span class="self">self</span>.inner)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(tokio_stream::wrappers::TcpListenerStream::new(tl))
-    }
-}
-
-<span class="kw">impl </span>From&lt;TcpListener&gt; <span class="kw">for </span>std::net::TcpListener {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>from(value: TcpListener) -&gt; <span class="self">Self </span>{
-        value.inner
-    }
 }
 
 <span class="attr">#[cfg(test)]

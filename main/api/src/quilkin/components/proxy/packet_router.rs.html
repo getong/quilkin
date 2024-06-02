@@ -298,12 +298,6 @@
 <a href="#296" id="296">296</a>
 <a href="#297" id="297">297</a>
 <a href="#298" id="298">298</a>
-<a href="#299" id="299">299</a>
-<a href="#300" id="300">300</a>
-<a href="#301" id="301">301</a>
-<a href="#302" id="302">302</a>
-<a href="#303" id="303">303</a>
-<a href="#304" id="304">304</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     sessions::{DownstreamReceiver, SessionKey},
     PipelineError, PipelineErrorDiscriminants, SessionPool,
@@ -320,7 +314,6 @@
 <span class="doccomment">/// Packet received from local port
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">struct </span>DownstreamPacket {
-    asn_info: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::net::maxmind_db::IpNetEntry&gt;,
     contents: PoolBuffer,
     received_at: UtcTimestamp,
     source: SocketAddr,
@@ -355,7 +348,8 @@
         <span class="kw">let </span>notify = Arc::new(tokio::sync::Notify::new());
         <span class="kw">let </span>is_ready = notify.clone();
 
-        <span class="kw">let </span>thread_span = <span class="macro">tracing::debug_span!</span>(<span class="string">"receiver"</span>, id = worker_id).or_current();
+        <span class="kw">let </span>thread_span =
+            <span class="macro">uring_span!</span>(<span class="macro">tracing::debug_span!</span>(<span class="string">"receiver"</span>, id = worker_id).or_current());
 
         <span class="kw">let </span>worker = <span class="macro">uring_spawn!</span>(thread_span, <span class="kw">async move </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>last_received_at = <span class="prelude-val">None</span>;
@@ -366,9 +360,7 @@
             <span class="macro">tracing::trace!</span>(port, <span class="string">"bound worker"</span>);
             <span class="kw">let </span>send_socket = socket.clone();
 
-            <span class="kw">let </span>upstream = <span class="macro">tracing::debug_span!</span>(<span class="string">"upstream"</span>).or_current();
-
-            <span class="macro">uring_inner_spawn!</span>(<span class="kw">async move </span>{
+            <span class="kw">let </span>inner_task = <span class="kw">async move </span>{
                 is_ready.notify_one();
 
                 <span class="kw">loop </span>{
@@ -415,7 +407,15 @@
                         }
                     }
                 }
-            }.instrument(upstream));
+            };
+
+            <span class="macro">cfg_if::cfg_if! </span>{
+                <span class="kw">if </span><span class="attr">#[cfg(debug_assertions)] </span>{
+                    <span class="macro">uring_inner_spawn!</span>(inner_task.instrument(<span class="macro">tracing::debug_span!</span>(<span class="string">"upstream"</span>).or_current()));
+                } <span class="kw">else </span>{
+                    <span class="macro">uring_inner_spawn!</span>(inner_task);
+                }
+            }
 
             <span class="kw">loop </span>{
                 <span class="comment">// Initialize a buffer for the UDP packet. We use the maximum size of a UDP
@@ -429,17 +429,13 @@
                         source.set_ip(source.ip().to_canonical());
                         <span class="kw">let </span>packet = DownstreamPacket {
                             received_at: UtcTimestamp::now(),
-                            asn_info: <span class="kw">crate</span>::net::maxmind_db::MaxmindDb::lookup(source.ip()),
                             contents,
                             source,
                         };
 
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(last_received_at) = last_received_at {
-                            <span class="kw">crate</span>::metrics::packet_jitter(
-                                <span class="kw">crate</span>::metrics::READ,
-                                packet.asn_info.as_ref(),
-                            )
-                            .set((packet.received_at - last_received_at).nanos());
+                            <span class="kw">crate</span>::metrics::packet_jitter(<span class="kw">crate</span>::metrics::READ, <span class="prelude-val">None</span>)
+                                .set((packet.received_at - last_received_at).nanos());
                         }
                         last_received_at = <span class="prelude-val">Some</span>(packet.received_at);
 
@@ -483,19 +479,13 @@
         </span>);
 
         <span class="kw">let </span>timer = <span class="kw">crate</span>::metrics::processing_time(<span class="kw">crate</span>::metrics::READ).start_timer();
-        <span class="kw">let </span>asn_info = packet.asn_info.clone();
-        <span class="kw">let </span>asn_info = asn_info.as_ref();
         <span class="kw">match </span><span class="self">Self</span>::process_downstream_received_packet(packet, config, sessions).<span class="kw">await </span>{
             <span class="prelude-val">Ok</span>(()) =&gt; {}
             <span class="prelude-val">Err</span>(error) =&gt; {
                 <span class="kw">let </span>discriminant = PipelineErrorDiscriminants::from(<span class="kw-2">&amp;</span>error).to_string();
-                <span class="kw">crate</span>::metrics::errors_total(<span class="kw">crate</span>::metrics::READ, <span class="kw-2">&amp;</span>discriminant, asn_info).inc();
-                <span class="kw">crate</span>::metrics::packets_dropped_total(
-                    <span class="kw">crate</span>::metrics::READ,
-                    <span class="kw-2">&amp;</span>discriminant,
-                    asn_info,
-                )
-                .inc();
+                <span class="kw">crate</span>::metrics::errors_total(<span class="kw">crate</span>::metrics::READ, <span class="kw-2">&amp;</span>discriminant, <span class="prelude-val">None</span>).inc();
+                <span class="kw">crate</span>::metrics::packets_dropped_total(<span class="kw">crate</span>::metrics::READ, <span class="kw-2">&amp;</span>discriminant, <span class="prelude-val">None</span>)
+                    .inc();
                 <span class="kw">let _ </span>= error_sender.send(error);
             }
         }
@@ -534,15 +524,13 @@
         // cheaply and returned to the pool once all references are dropped
         </span><span class="kw">let </span>contents = contents.freeze();
 
-        <span class="kw">for </span>endpoint <span class="kw">in </span>destinations.iter() {
+        <span class="kw">for </span>epa <span class="kw">in </span>destinations {
             <span class="kw">let </span>session_key = SessionKey {
                 source: packet.source,
-                dest: endpoint.address.to_socket_addr().<span class="kw">await</span><span class="question-mark">?</span>,
+                dest: epa.to_socket_addr().<span class="kw">await</span><span class="question-mark">?</span>,
             };
 
-            sessions
-                .send(session_key, packet.asn_info.clone(), contents.clone())
-                .<span class="kw">await</span><span class="question-mark">?</span>;
+            sessions.send(session_key, contents.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
