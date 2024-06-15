@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/components/admin.rs`."><title>admin.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0 (aedd173a2 2024-03-17)" data-channel="1.77.0" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/components/admin.rs`."><title>admin.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.1 (7cf61ebde 2024-03-27)" data-channel="1.77.1" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../quilkin/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -269,6 +269,24 @@
 <a href="#267" id="267">267</a>
 <a href="#268" id="268">268</a>
 <a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
 </pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2023 Google LLC
  *
@@ -287,12 +305,13 @@
 
 </span><span class="kw">mod </span>health;
 
-<span class="kw">use </span>std::convert::Infallible;
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::time::Duration;
 
-<span class="kw">use </span>hyper::service::{make_service_fn, service_fn};
-<span class="kw">use </span>hyper::{Body, Method, Request, Response, Server <span class="kw">as </span>HyperServer, StatusCode};
+<span class="kw">use </span>bytes::Bytes;
+<span class="kw">use </span>http_body_util::Full;
+<span class="kw">use </span>hyper::{Method, Request, Response, StatusCode};
+<span class="kw">type </span>Body = Full&lt;Bytes&gt;;
 
 <span class="kw">use </span><span class="kw">crate</span>::config::Config;
 <span class="kw">use </span>health::Health;
@@ -326,7 +345,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         config: Arc&lt;Config&gt;,
         address: <span class="prelude-ty">Option</span>&lt;std::net::SocketAddr&gt;,
-    ) -&gt; std::thread::JoinHandle&lt;<span class="prelude-ty">Result</span>&lt;(), hyper::Error&gt;&gt; {
+    ) -&gt; std::thread::JoinHandle&lt;eyre::Result&lt;()&gt;&gt; {
         <span class="kw">let </span>address = address.unwrap_or_else(|| (std::net::Ipv6Addr::UNSPECIFIED, PORT).into());
         <span class="kw">let </span>health = Health::new();
         <span class="macro">tracing::info!</span>(address = %address, <span class="string">"Starting admin endpoint"</span>);
@@ -342,28 +361,43 @@
                     .build()
                     .expect(<span class="string">"couldn't create tokio runtime in thread"</span>);
                 runtime.block_on(<span class="kw">async move </span>{
-                    <span class="kw">let </span>make_svc = make_service_fn(<span class="kw">move </span>|_conn| {
-                        <span class="kw">let </span>config = config.clone();
-                        <span class="kw">let </span>health = health.clone();
-                        <span class="kw">let </span>mode = mode.clone();
-                        <span class="kw">async move </span>{
-                            <span class="kw">let </span>config = config.clone();
-                            <span class="kw">let </span>health = health.clone();
-                            <span class="kw">let </span>mode = mode.clone();
-                            <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, Infallible&gt;(service_fn(<span class="kw">move </span>|req| {
+                    <span class="kw">let </span>accept_stream = tokio::net::TcpListener::bind(address).<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="kw">let </span>http_task: tokio::task::JoinHandle&lt;eyre::Result&lt;()&gt;&gt; =
+                        tokio::task::spawn(<span class="kw">async move </span>{
+                            <span class="kw">loop </span>{
+                                <span class="kw">let </span>(stream, <span class="kw">_</span>) = accept_stream.accept().<span class="kw">await</span><span class="question-mark">?</span>;
+                                <span class="kw">let </span>stream = hyper_util::rt::TokioIo::new(stream);
+
                                 <span class="kw">let </span>config = config.clone();
                                 <span class="kw">let </span>health = health.clone();
                                 <span class="kw">let </span>mode = mode.clone();
-                                <span class="kw">async move </span>{
-                                    <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, Infallible&gt;(
-                                        mode.handle_request(req, config, health).<span class="kw">await</span>,
-                                    )
-                                }
-                            }))
-                        }
-                    });
+                                tokio::spawn(<span class="kw">async move </span>{
+                                    <span class="kw">let </span>svc = hyper::service::service_fn(<span class="kw">move </span>|req| {
+                                        <span class="kw">let </span>config = config.clone();
+                                        <span class="kw">let </span>health = health.clone();
+                                        <span class="kw">let </span>mode = mode.clone();
 
-                    HyperServer::bind(<span class="kw-2">&amp;</span>address).serve(make_svc).<span class="kw">await
+                                        <span class="kw">async move </span>{
+                                            <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, std::convert::Infallible&gt;(
+                                                mode.handle_request(req, config, health).<span class="kw">await</span>,
+                                            )
+                                        }
+                                    });
+
+                                    <span class="kw">let </span>svc = tower::ServiceBuilder::new().service(svc);
+                                    <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = hyper::server::conn::http1::Builder::new()
+                                        .serve_connection(stream, svc)
+                                        .<span class="kw">await
+                                    </span>{
+                                        <span class="macro">tracing::warn!</span>(
+                                            <span class="string">"failed to reponse to phoenix request: {err}"
+                                        </span>);
+                                    }
+                                });
+                            }
+                        });
+
+                    http_task.<span class="kw">await</span><span class="question-mark">?
                 </span>})
             })
             .expect(<span class="string">"failed to spawn admin-http thread"</span>)
@@ -382,7 +416,7 @@
 
     <span class="kw">async fn </span>handle_request(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        request: Request&lt;Body&gt;,
+        request: Request&lt;hyper::body::Incoming&gt;,
         config: Arc&lt;Config&gt;,
         health: Health,
     ) -&gt; Response&lt;Body&gt; {
@@ -404,7 +438,7 @@
                         <span class="macro">tracing::warn!</span>(%error, <span class="string">"admin http server error"</span>);
                         Response::builder()
                             .status(StatusCode::INTERNAL_SERVER_ERROR)
-                            .body(Body::from(<span class="string">"internal error"</span>))
+                            .body(Body::new(Bytes::from(<span class="string">"internal error"</span>)))
                             .unwrap()
                     }
                 }
@@ -417,15 +451,17 @@
                         <span class="string">"Content-Type"</span>,
                         hyper::header::HeaderValue::from_static(<span class="string">"application/json"</span>),
                     )
-                    .body(Body::from(body))
+                    .body(Body::new(Bytes::from(body)))
                     .unwrap(),
                 <span class="prelude-val">Err</span>(err) =&gt; Response::builder()
                     .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .body(Body::from(<span class="macro">format!</span>(<span class="string">"failed to create config dump: {err}"</span>)))
+                    .body(Body::new(Bytes::from(<span class="macro">format!</span>(
+                        <span class="string">"failed to create config dump: {err}"
+                    </span>))))
                     .unwrap(),
             },
             (<span class="kw">_</span>, <span class="kw">_</span>) =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>response = Response::new(Body::empty());
+                <span class="kw">let </span><span class="kw-2">mut </span>response = Response::new(Body::new(Bytes::new()));
                 <span class="kw-2">*</span>response.status_mut() = StatusCode::NOT_FOUND;
                 response
             }
@@ -438,13 +474,13 @@
         <span class="kw">return </span>Response::new(<span class="string">"ok"</span>.into());
     }
 
-    <span class="kw">let </span><span class="kw-2">mut </span>response = Response::new(Body::empty());
+    <span class="kw">let </span><span class="kw-2">mut </span>response = Response::new(Body::new(Bytes::new()));
     <span class="kw-2">*</span>response.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
     response
 }
 
 <span class="kw">fn </span>collect_metrics() -&gt; Response&lt;Body&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>response = Response::new(Body::empty());
+    <span class="kw">let </span><span class="kw-2">mut </span>response = Response::new(Body::new(Bytes::new()));
     <span class="kw">let </span><span class="kw-2">mut </span>buffer = <span class="macro">vec!</span>[];
     <span class="kw">let </span>encoder = prometheus::TextEncoder::new();
     <span class="kw">let </span>body =
@@ -452,13 +488,13 @@
             .map_err(|error| <span class="macro">tracing::warn!</span>(%error, <span class="string">"Failed to encode metrics"</span>))
             .and_then(|<span class="kw">_</span>| {
                 String::from_utf8(buffer)
-                    .map(Body::from)
+                    .map(hyper::body::Bytes::from)
                     .map_err(|error| <span class="macro">tracing::warn!</span>(%error, <span class="string">"Failed to convert metrics to utf8"</span>))
             });
 
     <span class="kw">match </span>body {
         <span class="prelude-val">Ok</span>(body) =&gt; {
-            <span class="kw-2">*</span>response.body_mut() = body;
+            <span class="kw-2">*</span>response.body_mut() = Body::new(body);
         }
         <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
             <span class="kw-2">*</span>response.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
@@ -498,7 +534,7 @@
         .header(hyper::header::CONTENT_LENGTH, gzip_body.len() <span class="kw">as </span>u64)
         .header(hyper::header::CONTENT_TYPE, <span class="string">"application/octet-stream"</span>)
         .header(hyper::header::CONTENT_ENCODING, <span class="string">"gzip"</span>)
-        .body(Body::from(gzip_body))
+        .body(Body::new(Bytes::from(gzip_body)))
         .map_err(From::from)
 }
 
