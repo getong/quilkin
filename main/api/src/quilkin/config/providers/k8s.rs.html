@@ -171,7 +171,47 @@
 <a href="#169" id="169">169</a>
 <a href="#170" id="170">170</a>
 <a href="#171" id="171">171</a>
-</pre></div><pre class="rust"><code><span class="kw">pub mod </span>agones;
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+</pre></div><pre class="rust"><code><span class="comment">/*
+ * Copyright 2024 Google LLC All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+</span><span class="kw">pub mod </span>agones;
 
 <span class="kw">use </span>std::{collections::BTreeSet, sync::Arc};
 
@@ -189,6 +229,7 @@
     config: Arc&lt;<span class="kw">crate</span>::Config&gt;,
 ) -&gt; <span class="kw">impl </span>Stream&lt;Item = <span class="kw">crate</span>::Result&lt;(), eyre::Error&gt;&gt; {
     <span class="macro">async_stream::stream! </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>cmap = <span class="prelude-val">None</span>;
         <span class="kw">for await </span>event <span class="kw">in </span>configmap_events(client, namespace) {
             <span class="macro">tracing::trace!</span>(<span class="string">"new configmap event"</span>);
 
@@ -201,15 +242,24 @@
             };
 
             <span class="kw">let </span>configmap = <span class="kw">match </span>event {
-                Event::Applied(configmap) =&gt; configmap,
-                Event::Restarted(configmaps) =&gt; <span class="kw">match </span>configmaps.first() {
-                    <span class="prelude-val">Some</span>(configmap) =&gt; configmap.clone(),
-                    <span class="prelude-val">None </span>=&gt; {
+                Event::Apply(configmap) =&gt; configmap,
+                Event::Init =&gt; { <span class="kw">yield </span><span class="prelude-val">Ok</span>(()); <span class="kw">continue</span>; }
+                Event::InitApply(configmap) =&gt; {
+                    <span class="kw">if </span>cmap.is_none() {
+                        cmap = <span class="prelude-val">Some</span>(configmap);
+                    }
+                    <span class="kw">yield </span><span class="prelude-val">Ok</span>(());
+                    <span class="kw">continue</span>;
+                }
+                Event::InitDone =&gt; {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(cmap) = cmap.take() {
+                        cmap
+                    } <span class="kw">else </span>{
                         <span class="kw">yield </span><span class="prelude-val">Ok</span>(());
                         <span class="kw">continue</span>;
-                    },
-                },
-                Event::Deleted(<span class="kw">_</span>) =&gt; {
+                    }
+                }
+                Event::Delete(<span class="kw">_</span>) =&gt; {
                     config.filters.remove();
                     <span class="kw">yield </span><span class="prelude-val">Ok</span>(());
                     <span class="kw">continue</span>;
@@ -276,10 +326,12 @@
     address_selector: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::config::AddressSelector&gt;,
 ) -&gt; <span class="kw">impl </span>Stream&lt;Item = <span class="kw">crate</span>::Result&lt;(), eyre::Error&gt;&gt; {
     <span class="macro">async_stream::stream! </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>servers = BTreeSet::new();
+
         <span class="kw">for await </span>event <span class="kw">in </span>gameserver_events(client, namespace) {
             <span class="kw">let </span>ads = address_selector.as_ref();
             <span class="kw">match </span>event<span class="question-mark">? </span>{
-                Event::Applied(server) =&gt; {
+                Event::Apply(server) =&gt; {
                     <span class="macro">tracing::debug!</span>(<span class="string">"received applied event from k8s"</span>);
                     <span class="kw">if </span>!server.is_allocated() {
                         <span class="kw">yield </span><span class="prelude-val">Ok</span>(());
@@ -295,29 +347,25 @@
                     config.clusters.write()
                         .replace(locality.clone(), endpoint);
                 }
-
-                Event::Restarted(servers) =&gt; {
+                Event::Init =&gt; {},
+                Event::InitApply(server) =&gt; {
+                    <span class="kw">if </span>server.is_allocated() {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(ep) = server.endpoint(ads) {
+                            servers.insert(ep);
+                        }
+                    }
+                }
+                Event::InitDone =&gt; {
                     <span class="macro">tracing::debug!</span>(<span class="string">"received restart event from k8s"</span>);
-                    <span class="kw">let </span>servers: BTreeSet&lt;<span class="kw">_</span>&gt; = servers
-                        .into_iter()
-                        .filter_map(|server| {
-                            <span class="kw">if </span>!server.is_allocated() {
-                                <span class="kw">return </span><span class="prelude-val">None</span>;
-                            }
-
-                            server.endpoint(ads)
-                        })
-                        .collect();
 
                     <span class="macro">tracing::trace!</span>(
                         endpoints=%serde_json::to_value(servers.clone()).unwrap(),
                         <span class="string">"Restarting with endpoints"
                     </span>);
 
-                    config.clusters.write().insert(locality.clone(), servers);
+                    config.clusters.write().insert(locality.clone(), std::mem::take(<span class="kw-2">&amp;mut </span>servers));
                 }
-
-                Event::Deleted(server) =&gt; {
+                Event::Delete(server) =&gt; {
                     <span class="macro">tracing::debug!</span>(<span class="string">"received delete event from k8s"</span>);
                     <span class="kw">let </span>found = <span class="kw">if let </span><span class="prelude-val">Some</span>(endpoint) = server.endpoint(ads) {
                         config.clusters.write().remove_endpoint(<span class="kw-2">&amp;</span>endpoint)
