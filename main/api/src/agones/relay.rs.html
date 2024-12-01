@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/agones/src/relay.rs`."><title>relay.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="agones" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.1 (7cf61ebde 2024-03-27)" data-channel="1.77.1" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../agones/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/agones/src/relay.rs`."><title>relay.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="agones" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -316,6 +314,93 @@
 <a href="#314" id="314">314</a>
 <a href="#315" id="315">315</a>
 <a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
 </pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2023 Google LLC All Rights Reserved.
  *
@@ -369,12 +454,23 @@
         TOKEN_KEY,
     };
 
+    <span class="kw">const </span>SLOW: Duration = Duration::from_secs(<span class="number">30</span>);
+
     <span class="attr">#[tokio::test]
     #[serial]
     </span><span class="doccomment">/// Test for Agones Provider integration. Since this will look at all GameServers in the namespace
     /// for this test, we should only run Agones integration test in a serial manner, since they
     /// could easily collide with each other.
     </span><span class="kw">async fn </span>agones_token_router() {
+        run_test(<span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="number">0</span>).<span class="kw">await</span>;
+        run_test(<span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="number">1</span>).<span class="kw">await</span>;
+        run_test(<span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="number">2</span>).<span class="kw">await</span>;
+        run_test(<span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="number">3</span>).<span class="kw">await</span>;
+    }
+
+    <span class="kw">async fn </span>run_test(proxy: bool, relay: bool, agent: bool, id: u8) {
+        <span class="macro">println!</span>(<span class="string">"running agones_token_router {id}"</span>);
+
         <span class="kw">let </span>client = Client::new().<span class="kw">await</span>;
         <span class="kw">let </span>config_maps: Api&lt;ConfigMap&gt; = client.namespaced_api();
         <span class="kw">let </span>deployments: Api&lt;Deployment&gt; = client.namespaced_api();
@@ -385,15 +481,17 @@
         <span class="kw">let </span>dp = DeleteParams::default();
 
         <span class="kw">let </span>config_map = create_token_router_config(<span class="kw-2">&amp;</span>config_maps).<span class="kw">await</span>;
-        agones_agent_deployment(<span class="kw-2">&amp;</span>client, deployments.clone()).<span class="kw">await</span>;
+        <span class="kw">let </span>(relay_name, agent_name) =
+            agones_agent_deployment(<span class="kw-2">&amp;</span>client, deployments.clone(), relay, agent, id).<span class="kw">await</span>;
 
-        <span class="kw">let </span>relay_proxy_name = <span class="string">"quilkin-relay-proxy"</span>;
+        <span class="kw">let </span>relay_proxy_name = <span class="macro">format!</span>(<span class="string">"quilkin-relay-proxy-{id}"</span>);
         <span class="kw">let </span>proxy_address = quilkin_proxy_deployment(
             <span class="kw-2">&amp;</span>client,
             deployments.clone(),
-            relay_proxy_name.into(),
+            relay_proxy_name.clone(),
             <span class="number">7005</span>,
-            <span class="string">"http://quilkin-relay-agones:7800"</span>.into(),
+            <span class="macro">format!</span>(<span class="string">"http://{relay_name}:7800"</span>),
+            proxy,
         )
         .<span class="kw">await</span>;
 
@@ -416,13 +514,19 @@
 
         <span class="comment">// Proxy Deployment should be ready, since there is now an endpoint
         </span><span class="kw">if </span>timeout(
-            Duration::from_secs(<span class="number">30</span>),
-            await_condition(deployments.clone(), relay_proxy_name, is_deployment_ready()),
+            SLOW,
+            await_condition(
+                deployments.clone(),
+                <span class="kw-2">&amp;</span>relay_proxy_name,
+                is_deployment_ready(),
+            ),
         )
         .<span class="kw">await
         </span>.is_err()
         {
             debug_pods(<span class="kw-2">&amp;</span>client, <span class="macro">format!</span>(<span class="string">"role={relay_proxy_name}"</span>)).<span class="kw">await</span>;
+            debug_pods(<span class="kw-2">&amp;</span>client, <span class="string">"role=relay"</span>.into()).<span class="kw">await</span>;
+            debug_pods(<span class="kw-2">&amp;</span>client, <span class="string">"role=agent"</span>.into()).<span class="kw">await</span>;
             <span class="macro">panic!</span>(<span class="string">"Quilkin proxy deployment should be ready"</span>);
         }
 
@@ -471,19 +575,82 @@
         }
         <span class="kw">if </span>!failed {
             debug_pods(<span class="kw-2">&amp;</span>client, <span class="macro">format!</span>(<span class="string">"role={relay_proxy_name}"</span>)).<span class="kw">await</span>;
-            debug_pods(<span class="kw-2">&amp;</span>client, <span class="string">"role=xds"</span>.into()).<span class="kw">await</span>;
+            debug_pods(<span class="kw-2">&amp;</span>client, <span class="string">"role=relay"</span>.into()).<span class="kw">await</span>;
+            debug_pods(<span class="kw-2">&amp;</span>client, <span class="string">"role=agent"</span>.into()).<span class="kw">await</span>;
         }
         <span class="macro">assert!</span>(failed, <span class="string">"Packet should have failed"</span>);
 
+        <span class="macro">println!</span>(<span class="string">"deleting resources..."</span>);
+        <span class="kw">use </span>either::Either;
+        <span class="kw">let </span>cm_name = config_map.name_unchecked();
         <span class="comment">// cleanup
-        </span>config_maps
-            .delete(<span class="kw-2">&amp;</span>config_map.name_unchecked(), <span class="kw-2">&amp;</span>dp)
+        </span><span class="kw">match </span>config_maps
+            .delete(<span class="kw-2">&amp;</span>cm_name, <span class="kw-2">&amp;</span>dp)
             .<span class="kw">await
-            </span>.unwrap();
+            </span>.expect(<span class="string">"failed to delete config map"</span>)
+        {
+            Either::Left(<span class="kw">_</span>) =&gt; {
+                timeout(
+                    SLOW,
+                    await_condition(
+                        deployments.clone(),
+                        <span class="kw-2">&amp;</span>relay_proxy_name,
+                        kube::runtime::conditions::is_deleted(<span class="kw-2">&amp;</span>cm_name),
+                    ),
+                )
+                .<span class="kw">await
+                </span>.expect(<span class="string">"failed to delete config map within timeout"</span>)
+                .expect(<span class="string">"failed to delete config map"</span>);
+                <span class="macro">println!</span>(<span class="string">"...config map deleted"</span>);
+            }
+            Either::Right(<span class="kw">_</span>) =&gt; {
+                <span class="macro">println!</span>(<span class="string">"config map deleted"</span>);
+            }
+        }
+
+        <span class="kw">async fn </span>delete_deployment(dp: <span class="kw-2">&amp;</span>Api&lt;Deployment&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), kube::Error&gt; {
+            <span class="kw">async fn </span>inner(dp: <span class="kw-2">&amp;</span>Api&lt;Deployment&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), kube::Error&gt; {
+                <span class="kw">if let </span>Either::Left(d) = dp.delete(name, <span class="kw-2">&amp;</span>DeleteParams::default()).<span class="kw">await</span><span class="question-mark">? </span>{
+                    await_condition(
+                        dp.clone(),
+                        name,
+                        kube::runtime::conditions::is_deleted(<span class="kw-2">&amp;</span>d.uid().unwrap()),
+                    )
+                    .<span class="kw">await
+                    </span>.map_err(|err| kube::Error::Service(Box::new(err)))<span class="question-mark">?</span>;
+                }
+
+                <span class="prelude-val">Ok</span>(())
+            }
+
+            timeout(SLOW, inner(dp, name)).<span class="kw">await</span>.map_err(|_err| {
+                kube::Error::Api(kube::error::ErrorResponse {
+                    message: <span class="macro">format!</span>(<span class="string">"failed to delete deployment {name} within {SLOW:?}"</span>),
+                    status: String::new(),
+                    reason: String::new(),
+                    code: <span class="number">408</span>,
+                })
+            })<span class="question-mark">??</span>;
+            <span class="macro">println!</span>(<span class="string">"deployment {name} deleted"</span>);
+            <span class="prelude-val">Ok</span>(())
+        }
+
+        <span class="macro">tokio::try_join!</span>(
+            delete_deployment(<span class="kw-2">&amp;</span>deployments, <span class="kw-2">&amp;</span>relay_proxy_name),
+            delete_deployment(<span class="kw-2">&amp;</span>deployments, <span class="kw-2">&amp;</span>agent_name),
+            delete_deployment(<span class="kw-2">&amp;</span>deployments, <span class="kw-2">&amp;</span>relay_name),
+        )
+        .expect(<span class="string">"failed to delete deployment(s) within timeout"</span>);
     }
 
     <span class="doccomment">/// Deploys the Agent and Relay Server Deployments and Services
-    </span><span class="kw">async fn </span>agones_agent_deployment(client: <span class="kw-2">&amp;</span>Client, deployments: Api&lt;Deployment&gt;) {
+    </span><span class="kw">async fn </span>agones_agent_deployment(
+        client: <span class="kw-2">&amp;</span>Client,
+        deployments: Api&lt;Deployment&gt;,
+        relay: bool,
+        agent: bool,
+        id: u8,
+    ) -&gt; (String, String) {
         <span class="kw">let </span>service_accounts: Api&lt;ServiceAccount&gt; = client.namespaced_api();
         <span class="kw">let </span>cluster_roles: Api&lt;ClusterRole&gt; = Api::all(client.kubernetes.clone());
         <span class="kw">let </span>role_bindings: Api&lt;RoleBinding&gt; = client.namespaced_api();
@@ -494,6 +661,8 @@
         <span class="kw">let </span>rbac_name =
             create_agones_rbac_read_account(client, service_accounts, cluster_roles, role_bindings)
                 .<span class="kw">await</span>;
+
+        <span class="kw">let </span>relay_name = <span class="macro">format!</span>(<span class="string">"quilkin-relay-agones-{id}"</span>);
 
         <span class="comment">// Setup the relay
         </span><span class="kw">let </span>args = [
@@ -507,7 +676,7 @@
         <span class="kw">let </span>labels = BTreeMap::from([(<span class="string">"role"</span>.to_string(), <span class="string">"relay"</span>.to_string())]);
         <span class="kw">let </span>deployment = Deployment {
             metadata: ObjectMeta {
-                name: <span class="prelude-val">Some</span>(<span class="string">"quilkin-relay-agones"</span>.into()),
+                name: <span class="prelude-val">Some</span>(relay_name.clone()),
                 labels: <span class="prelude-val">Some</span>(labels.clone()),
                 ..Default::default()
             },
@@ -523,7 +692,7 @@
                         ..Default::default()
                     }),
                     spec: <span class="prelude-val">Some</span>(PodSpec {
-                        containers: <span class="macro">vec!</span>[quilkin_container(client, <span class="prelude-val">Some</span>(args), <span class="prelude-val">None</span>)],
+                        containers: <span class="macro">vec!</span>[quilkin_container(client, <span class="prelude-val">Some</span>(args), <span class="prelude-val">None</span>, relay)],
                         service_account_name: <span class="prelude-val">Some</span>(rbac_name.clone()),
                         ..Default::default()
                     }),
@@ -537,7 +706,7 @@
         <span class="comment">// relay service
         </span><span class="kw">let </span>service = Service {
             metadata: ObjectMeta {
-                name: <span class="prelude-val">Some</span>(<span class="string">"quilkin-relay-agones"</span>.into()),
+                name: <span class="prelude-val">Some</span>(relay_name.clone()),
                 ..Default::default()
             },
             spec: <span class="prelude-val">Some</span>(ServiceSpec {
@@ -566,8 +735,8 @@
 
         <span class="kw">let </span>name = relay_deployment.name_unchecked();
         <span class="kw">let </span>result = timeout(
-            Duration::from_secs(<span class="number">30</span>),
-            await_condition(deployments.clone(), name.as_str(), is_deployment_ready()),
+            SLOW,
+            await_condition(deployments.clone(), <span class="kw-2">&amp;</span>name, is_deployment_ready()),
         )
         .<span class="kw">await</span>;
         <span class="kw">if </span>result.is_err() {
@@ -577,11 +746,13 @@
         }
         result.unwrap().expect(<span class="string">"Should have a relay deployment"</span>);
 
+        <span class="kw">let </span>agent_name = <span class="macro">format!</span>(<span class="string">"quilkin-agones-agent-{id}"</span>);
+
         <span class="comment">// agent deployment
         </span><span class="kw">let </span>args = [
             <span class="string">"agent"</span>,
             <span class="string">"--relay"</span>,
-            <span class="string">"http://quilkin-relay-agones:7900"</span>,
+            <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"http://{relay_name}:7900"</span>),
             <span class="string">"agones"</span>,
             <span class="string">"--config-namespace"</span>,
             client.namespace.as_str(),
@@ -593,7 +764,7 @@
         <span class="kw">let </span>labels = BTreeMap::from([(<span class="string">"role"</span>.to_string(), <span class="string">"agent"</span>.to_string())]);
         <span class="kw">let </span>deployment = Deployment {
             metadata: ObjectMeta {
-                name: <span class="prelude-val">Some</span>(<span class="string">"quilkin-agones-agent"</span>.into()),
+                name: <span class="prelude-val">Some</span>(agent_name.clone()),
                 labels: <span class="prelude-val">Some</span>(labels.clone()),
                 ..Default::default()
             },
@@ -609,7 +780,7 @@
                         ..Default::default()
                     }),
                     spec: <span class="prelude-val">Some</span>(PodSpec {
-                        containers: <span class="macro">vec!</span>[quilkin_container(client, <span class="prelude-val">Some</span>(args), <span class="prelude-val">None</span>)],
+                        containers: <span class="macro">vec!</span>[quilkin_container(client, <span class="prelude-val">Some</span>(args), <span class="prelude-val">None</span>, agent)],
                         service_account_name: <span class="prelude-val">Some</span>(rbac_name),
                         ..Default::default()
                     }),
@@ -621,7 +792,7 @@
         <span class="kw">let </span>agent_deployment = deployments.create(<span class="kw-2">&amp;</span>pp, <span class="kw-2">&amp;</span>deployment).<span class="kw">await</span>.unwrap();
         <span class="kw">let </span>name = agent_deployment.name_unchecked();
         <span class="kw">let </span>result = timeout(
-            Duration::from_secs(<span class="number">30</span>),
+            SLOW,
             await_condition(deployments.clone(), name.as_str(), is_deployment_ready()),
         )
         .<span class="kw">await</span>;
@@ -630,6 +801,7 @@
             <span class="macro">panic!</span>(<span class="string">"Agent Deployment should be ready"</span>);
         }
         result.unwrap().expect(<span class="string">"Should have an agent deployment"</span>);
+        (relay_name, agent_name)
     }
 }
 </code></pre></div></section></main></body></html>

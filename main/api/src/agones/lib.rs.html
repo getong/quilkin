@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/agones/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="agones" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.1 (7cf61ebde 2024-03-27)" data-channel="1.77.1" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../agones/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/agones/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="agones" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -729,6 +727,16 @@
 <a href="#727" id="727">727</a>
 <a href="#728" id="728">728</a>
 <a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
 </pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2022 Google LLC
  *
@@ -791,10 +799,9 @@
 <span class="kw">mod </span>relay;
 <span class="kw">mod </span>sidecar;
 
-<span class="attr">#[allow(dead_code)]
-</span><span class="kw">static </span>CLIENT: OnceCell&lt;Client&gt; = OnceCell::const_new();
-<span class="attr">#[allow(dead_code)]
-</span><span class="kw">const </span>IMAGE_TAG: <span class="kw-2">&amp;</span>str = <span class="string">"IMAGE_TAG"</span>;
+<span class="kw">pub static </span>CLIENT: OnceCell&lt;Client&gt; = OnceCell::const_new();
+<span class="kw">pub const </span>IMAGE_TAG: <span class="kw-2">&amp;</span>str = <span class="string">"IMAGE_TAG"</span>;
+<span class="kw">pub const </span>PREV_IMAGE_TAG: <span class="kw-2">&amp;</span>str = <span class="string">"PREV_IMAGE_TAG"</span>;
 <span class="kw">const </span>DELETE_DELAY_SECONDS: <span class="kw-2">&amp;</span>str = <span class="string">"DELETE_DELAY_SECONDS"</span>;
 <span class="doccomment">/// A simple udp server that returns packets that are sent to it.
 /// See: &lt;https://github.com/googleforgames/agones/tree/main/examples/simple-game-server&gt;
@@ -813,6 +820,7 @@
     </span><span class="kw">pub </span>namespace: String,
     <span class="doccomment">/// The name and tag of the Quilkin image being tested
     </span><span class="kw">pub </span>quilkin_image: String,
+    <span class="kw">pub </span>prev_quilkin_image: String,
 }
 
 <span class="kw">impl </span>Client {
@@ -831,7 +839,8 @@
                 Client {
                     kubernetes: client.clone(),
                     namespace: setup_namespace(client).<span class="kw">await</span>,
-                    quilkin_image: env::var(IMAGE_TAG).unwrap(),
+                    quilkin_image: env::var(IMAGE_TAG).expect(IMAGE_TAG),
+                    prev_quilkin_image: env::var(PREV_IMAGE_TAG).expect(PREV_IMAGE_TAG),
                 }
             })
             .<span class="kw">await
@@ -1034,7 +1043,7 @@
     rbac_name.into()
 }
 
-<span class="doccomment">/// Create a Deployment with a singular Quilkin proxy, and return it's address.
+<span class="doccomment">/// Create a Deployment with a singular Quilkin proxy, and return its address.
 /// The `name` variable is used as role={name} for label lookup.
 </span><span class="kw">pub async fn </span>quilkin_proxy_deployment(
     client: <span class="kw-2">&amp;</span>Client,
@@ -1042,6 +1051,7 @@
     name: String,
     host_port: u16,
     management_server: String,
+    current: bool,
 ) -&gt; SocketAddr {
     <span class="kw">let </span>pp = PostParams::default();
     <span class="kw">let </span><span class="kw-2">mut </span>container = quilkin_container(
@@ -1051,6 +1061,7 @@
             <span class="macro">format!</span>(<span class="string">"--management-server={management_server}"</span>),
         ]),
         <span class="prelude-val">None</span>,
+        current,
     );
 
     <span class="comment">// we'll use a host port, since spinning up a load balancer takes a long time.
@@ -1311,10 +1322,17 @@
     client: <span class="kw-2">&amp;</span>Client,
     args: <span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
     volume_mount: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    current: bool,
 ) -&gt; Container {
+    <span class="kw">let </span>image = <span class="kw">if </span>current {
+        client.quilkin_image.clone()
+    } <span class="kw">else </span>{
+        client.prev_quilkin_image.clone()
+    };
+
     <span class="kw">let </span><span class="kw-2">mut </span>container = Container {
         name: <span class="string">"quilkin"</span>.into(),
-        image: <span class="prelude-val">Some</span>(client.quilkin_image.clone()),
+        image: <span class="prelude-val">Some</span>(image),
         args,
         env: <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[EnvVar {
             name: <span class="string">"RUST_LOG"</span>.to_string(),
