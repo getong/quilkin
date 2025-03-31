@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/components/manage.rs`."><title>manage.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/components/manage.rs`."><title>manage.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0 (4d91de4e4 2025-02-17)" data-channel="1.85.0" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">quilkin/components/</div>manage.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -90,8 +91,7 @@
 <a href="#90" id="90">90</a>
 <a href="#91" id="91">91</a>
 <a href="#92" id="92">92</a>
-<a href="#93" id="93">93</a>
-</pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#93" id="93">93</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2024 Google LLC All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -107,18 +107,18 @@
  *  limitations under the License.
  */
 
-</span><span class="kw">pub use </span><span class="kw">super</span>::agent::Ready;
-<span class="kw">use </span><span class="kw">super</span>::RunArgs;
+</span><span class="kw">use </span><span class="kw">super</span>::RunArgs;
+<span class="kw">pub use </span><span class="kw">super</span>::agent::Ready;
 <span class="kw">pub use crate</span>::{
     config::Providers,
-    net::{endpoint::Locality, DualStackLocalSocket},
+    net::{DualStackLocalSocket, endpoint::Locality},
 };
 
 <span class="kw">pub struct </span>Manage {
     <span class="kw">pub </span>locality: <span class="prelude-ty">Option</span>&lt;Locality&gt;,
     <span class="kw">pub </span>relay_servers: Vec&lt;tonic::transport::Endpoint&gt;,
     <span class="kw">pub </span>provider: Providers,
-    <span class="kw">pub </span>listener: <span class="kw">crate</span>::net::TcpListener,
+    <span class="kw">pub </span>port: u16,
     <span class="kw">pub </span>address_selector: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::config::AddressSelector&gt;,
 }
 
@@ -132,27 +132,34 @@
             <span class="kw-2">mut </span>shutdown_rx,
         }: RunArgs&lt;Ready&gt;,
     ) -&gt; <span class="kw">crate</span>::Result&lt;()&gt; {
+        <span class="kw">let </span><span class="prelude-val">Some</span>(clusters) = config.dyn_cfg.clusters() <span class="kw">else </span>{
+            <span class="macro">eyre::bail!</span>(<span class="string">"clusters were not configured, this is a configuration issue"</span>);
+        };
+
         <span class="kw">if let </span><span class="prelude-val">Some</span>(locality) = <span class="kw-2">&amp;</span><span class="self">self</span>.locality {
-            config
-                .clusters
-                .modify(|map| map.update_unlocated_endpoints(locality.clone()));
+            clusters.modify(|map| map.update_unlocated_endpoints(<span class="prelude-val">None</span>, locality.clone()));
         }
 
-        <span class="kw">let </span>provider_task = <span class="self">self</span>.provider.spawn(
-            config.clone(),
-            ready.provider_is_healthy.clone(),
-            <span class="self">self</span>.locality,
-            <span class="self">self</span>.address_selector,
-            <span class="bool-val">false</span>,
-        );
+        <span class="kw">let </span>provider_task = <span class="kw">match </span><span class="self">self</span>.provider {
+            Providers::Agones {
+                config_namespace,
+                gameservers_namespace,
+            } =&gt; <span class="kw">crate</span>::config::providersv2::Providers::default()
+                .k8s()
+                .k8s_namespace(config_namespace.unwrap_or_default())
+                .agones()
+                .agones_namespace(gameservers_namespace),
+            Providers::File { path } =&gt; <span class="kw">crate</span>::config::providersv2::Providers::default()
+                .fs()
+                .fs_path(path),
+        }
+        .spawn_providers(<span class="kw-2">&amp;</span>config, ready.provider_is_healthy.clone(), <span class="self">self</span>.locality);
 
         <span class="kw">let </span>_relay_stream = <span class="kw">if </span>!<span class="self">self</span>.relay_servers.is_empty() {
             <span class="macro">tracing::info!</span>(<span class="string">"connecting to relay server"</span>);
-            <span class="kw">let </span>client = <span class="kw">crate</span>::net::xds::client::MdsClient::connect(
-                String::clone(<span class="kw-2">&amp;</span>config.id.load()),
-                <span class="self">self</span>.relay_servers,
-            )
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let </span>client =
+                <span class="kw">crate</span>::net::xds::client::MdsClient::connect(config.id(), <span class="self">self</span>.relay_servers)
+                    .<span class="kw">await</span><span class="question-mark">?</span>;
 
             <span class="comment">// Attempt to connect to a delta stream if the relay has one
             // available, otherwise fallback to the regular aggregated stream
@@ -160,25 +167,18 @@
                 client
                     .delta_stream(config.clone(), ready.relay_is_healthy.clone())
                     .<span class="kw">await
-                    </span>.map_err(|<span class="kw">_</span>| <span class="macro">eyre::eyre!</span>(<span class="string">"failed to acquire delta stream"</span>))<span class="question-mark">?</span>,
+                    </span>.map_err(|_err| <span class="macro">eyre::eyre!</span>(<span class="string">"failed to acquire delta stream"</span>))<span class="question-mark">?</span>,
             )
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>};
 
-        <span class="kw">use </span>futures::TryFutureExt <span class="kw">as _</span>;
-        <span class="kw">let </span>server_task = tokio::spawn(
-            <span class="kw">crate</span>::net::xds::server::ControlPlane::from_arc(
-                config,
-                <span class="kw">crate</span>::components::admin::IDLE_REQUEST_INTERVAL,
-            )
-            .management_server(<span class="self">self</span>.listener)<span class="question-mark">?</span>,
-        )
-        .map_err(From::from)
-        .and_then(std::future::ready);
+        <span class="kw">crate</span>::cli::Service::default()
+            .xds()
+            .xds_port(<span class="self">self</span>.port)
+            .spawn_services(<span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>shutdown_rx)<span class="question-mark">?</span>;
 
         <span class="macro">tokio::select!</span> {
-            result = server_task =&gt; result,
             result = provider_task =&gt; result<span class="question-mark">?</span>,
             result = shutdown_rx.changed() =&gt; result.map_err(From::from),
         }

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/test.rs`."><title>test.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/test.rs`."><title>test.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0 (4d91de4e4 2025-02-17)" data-channel="1.85.0" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">quilkin/</div>test.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -540,7 +541,12 @@
 <a href="#540" id="540">540</a>
 <a href="#541" id="541">541</a>
 <a href="#542" id="542">542</a>
-</pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -564,13 +570,13 @@
 <span class="kw">use </span>tracing_subscriber::EnvFilter;
 
 <span class="kw">use crate</span>::{
+    collections::BufferPool,
     config::Config,
-    filters::{prelude::<span class="kw-2">*</span>, FilterRegistry},
+    filters::{FilterRegistry, prelude::<span class="kw-2">*</span>},
+    net::DualStackEpollSocket <span class="kw">as </span>DualStackLocalSocket,
     net::endpoint::metadata::Value,
     net::endpoint::{Endpoint, EndpointAddress},
-    net::DualStackEpollSocket <span class="kw">as </span>DualStackLocalSocket,
-    pool::BufferPool,
-    ShutdownKind, ShutdownRx, ShutdownTx,
+    signal::{ShutdownKind, ShutdownRx, ShutdownTx},
 };
 
 <span class="kw">static </span>LOG_ONCE: Once = Once::new();
@@ -583,7 +589,7 @@
             .pretty()
             .with_ansi(<span class="bool-val">false</span>)
             .with_env_filter(filter)
-            .init()
+            .init();
     });
 }
 
@@ -640,8 +646,14 @@
 <span class="comment">// TestFilter is useful for testing that commands are executing filters appropriately.
 </span><span class="kw">pub struct </span>TestFilter;
 
+<span class="kw">impl </span>TestFilter {
+    <span class="kw">pub fn </span>testing(_config: <span class="prelude-ty">Option</span>&lt;()&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self
+    </span>}
+}
+
 <span class="kw">impl </span>Filter <span class="kw">for </span>TestFilter {
-    <span class="kw">fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>ReadContext) -&gt; <span class="prelude-ty">Result</span>&lt;(), FilterError&gt; {
+    <span class="kw">fn </span>read&lt;P: PacketMut&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>ReadContext&lt;<span class="lifetime">'_</span>, P&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), FilterError&gt; {
         <span class="comment">// append values on each run
         </span>ctx.metadata
             .entry(<span class="string">"downstream"</span>.into())
@@ -649,11 +661,11 @@
             .or_insert_with(|| Value::String(<span class="string">"receive"</span>.into()));
 
         ctx.contents
-            .extend_from_slice(<span class="macro">format!</span>(<span class="string">":odr:{}"</span>, ctx.source).as_bytes());
+            .extend_tail(<span class="macro">format!</span>(<span class="string">":odr:{}"</span>, ctx.source).as_bytes());
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>WriteContext) -&gt; <span class="prelude-ty">Result</span>&lt;(), FilterError&gt; {
+    <span class="kw">fn </span>write&lt;P: PacketMut&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>WriteContext&lt;P&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), FilterError&gt; {
         <span class="comment">// append values on each run
         </span>ctx.metadata
             .entry(<span class="string">"upstream"</span>.into())
@@ -661,7 +673,7 @@
             .or_insert_with(|| Value::String(<span class="string">"receive"</span>.to_string()));
 
         ctx.contents
-            .extend_from_slice(<span class="macro">format!</span>(<span class="string">":our:{}:{}"</span>, ctx.source, ctx.dest).as_bytes());
+            .extend_tail(<span class="macro">format!</span>(<span class="string">":our:{}:{}"</span>, ctx.source, ctx.dest).as_bytes());
         <span class="prelude-val">Ok</span>(())
     }
 }
@@ -693,14 +705,18 @@
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>TestHelper {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">for </span>shutdown_tx <span class="kw">in </span><span class="self">self</span>.server_shutdown_tx.iter_mut().flat_map(|tx| tx.take()) {
+        <span class="kw">for </span>shutdown_tx <span class="kw">in </span><span class="self">self
+            </span>.server_shutdown_tx
+            .iter_mut()
+            .filter_map(|tx| tx.take())
+        {
             shutdown_tx
                 .send(ShutdownKind::Testing)
                 .map_err(|error| {
                     <span class="macro">tracing::warn!</span>(
                         %error,
                         <span class="string">"Failed to send server shutdown over channel"
-                    </span>)
+                    </span>);
                 })
                 .ok();
         }
@@ -830,12 +846,13 @@
         server: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::components::proxy::Proxy&gt;,
         with_admin: <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Option</span>&lt;SocketAddr&gt;&gt;,
     ) -&gt; u16 {
-        <span class="kw">let </span>(shutdown_tx, shutdown_rx) = <span class="kw">crate</span>::make_shutdown_channel(<span class="kw">crate</span>::ShutdownKind::Testing);
-        <span class="self">self</span>.server_shutdown_tx.push(<span class="prelude-val">Some</span>(shutdown_tx));
-        <span class="kw">let </span>mode = <span class="kw">crate</span>::components::admin::Admin::Proxy(&lt;<span class="kw">_</span>&gt;::default());
+        <span class="kw">let </span>(shutdown_tx, shutdown_rx) =
+            <span class="kw">crate</span>::signal::channel(<span class="kw">crate</span>::signal::ShutdownKind::Testing);
+        <span class="self">self</span>.server_shutdown_tx.push(<span class="prelude-val">Some</span>(shutdown_tx.clone()));
+        <span class="kw">let </span>ready = &lt;<span class="kw">_</span>&gt;::default();
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(address) = with_admin {
-            mode.server(config.clone(), address);
+            <span class="kw">crate</span>::components::admin::server(config.clone(), ready, shutdown_tx, address);
         }
 
         <span class="kw">let </span>server = server.unwrap_or_else(|| {
@@ -844,20 +861,16 @@
 
             <span class="kw">crate</span>::components::proxy::Proxy {
                 num_workers: std::num::NonZeroUsize::new(<span class="number">1</span>).unwrap(),
-                mmdb: <span class="prelude-val">None</span>,
-                management_servers: Vec::new(),
-                to: Vec::new(),
-                to_tokens: <span class="prelude-val">None</span>,
-                socket: <span class="kw">crate</span>::net::raw_socket_with_reuse(<span class="number">0</span>).unwrap(),
+                socket: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::net::raw_socket_with_reuse(<span class="number">0</span>).unwrap()),
                 qcmp,
                 phoenix,
-                notifier: <span class="prelude-val">None</span>,
+                ..Default::default()
             }
         });
 
         <span class="kw">let </span>(prox_tx, prox_rx) = tokio::sync::oneshot::channel();
 
-        <span class="kw">let </span>port = <span class="kw">crate</span>::net::socket_port(<span class="kw-2">&amp;</span>server.socket);
+        <span class="kw">let </span>port = <span class="kw">crate</span>::net::socket_port(server.socket.as_ref().unwrap());
 
         tokio::spawn(<span class="kw">async move </span>{
             server
@@ -880,14 +893,13 @@
     <span class="doccomment">/// Returns a receiver subscribed to the helper's shutdown event.
     </span><span class="kw">async fn </span>get_shutdown_subscriber(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ShutdownRx {
         <span class="comment">// If this is the first call, then we set up the channel first.
-        </span><span class="kw">match </span><span class="self">self</span>.shutdown_ch {
-            <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="kw-2">ref </span>rx)) =&gt; rx.clone(),
-            <span class="prelude-val">None </span>=&gt; {
-                <span class="kw">let </span>ch = <span class="kw">crate</span>::make_shutdown_channel(<span class="kw">crate</span>::ShutdownKind::Testing);
-                <span class="kw">let </span>recv = ch.<span class="number">1</span>.clone();
-                <span class="self">self</span>.shutdown_ch = <span class="prelude-val">Some</span>(ch);
-                recv
-            }
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, rx)) = <span class="kw-2">&amp;</span><span class="self">self</span>.shutdown_ch {
+            rx.clone()
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>ch = <span class="kw">crate</span>::signal::channel(ShutdownKind::Testing);
+            <span class="kw">let </span>recv = ch.<span class="number">1</span>.clone();
+            <span class="self">self</span>.shutdown_ch = <span class="prelude-val">Some</span>(ch);
+            recv
         }
     }
 }
@@ -896,7 +908,7 @@
     once_cell::sync::Lazy::new(|| Arc::new(BufferPool::default()));
 
 <span class="attr">#[inline]
-</span><span class="kw">pub fn </span>alloc_buffer(data: <span class="kw">impl </span>AsRef&lt;[u8]&gt;) -&gt; <span class="kw">crate</span>::pool::PoolBuffer {
+</span><span class="kw">pub fn </span>alloc_buffer(data: <span class="kw">impl </span>AsRef&lt;[u8]&gt;) -&gt; <span class="kw">crate</span>::collections::PoolBuffer {
     BUFFER_POOL.clone().alloc_slice(data.as_ref())
 }
 
@@ -913,12 +925,11 @@
     <span class="kw">let </span>source = <span class="string">"127.0.0.1:90"</span>.parse().unwrap();
     <span class="kw">let </span>contents = <span class="string">b"hello"</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>dest = Vec::new();
-    <span class="kw">let </span><span class="kw-2">mut </span>context =
-        ReadContext::new(endpoints.clone(), source, alloc_buffer(contents), <span class="kw-2">&amp;mut </span>dest);
+    <span class="kw">let </span><span class="kw-2">mut </span>context = ReadContext::new(<span class="kw-2">&amp;</span>endpoints, source, alloc_buffer(contents), <span class="kw-2">&amp;mut </span>dest);
 
     filter.read(<span class="kw-2">&amp;mut </span>context).unwrap();
     <span class="macro">assert!</span>(context.destinations.is_empty());
-    <span class="macro">assert_eq!</span>(endpoints, context.endpoints);
+    <span class="macro">assert_eq!</span>(endpoints.as_ref(), context.endpoints);
     <span class="macro">assert_eq!</span>(contents, <span class="kw-2">&amp;*</span>context.contents);
 }
 
@@ -979,6 +990,7 @@
     <span class="kw">pub fn </span>with_dummy_endpoint() -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>config = <span class="self">Self</span>::default();
         config.clusters.insert(
+            <span class="prelude-val">None</span>,
             <span class="prelude-val">None</span>,
             [Endpoint::new((std::net::Ipv4Addr::LOCALHOST, <span class="number">8080</span>).into())].into(),
         );
@@ -1042,7 +1054,7 @@
 /// temporary directory named after the test
 </span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules!</span> temp_file {
-    (<span class="macro-nonterminal">$prefix</span>:expr) =&gt; {{
+    (<span class="macro-nonterminal">$prefix</span>:expr_2021) =&gt; {{
         <span class="kw">let </span>name = <span class="macro-nonterminal">$</span><span class="macro">crate::__func_name!</span>();
         <span class="kw">let </span><span class="macro-nonterminal">name </span>= name.strip_suffix(<span class="string">"::{{closure}}"</span>).unwrap_or(name);
         <span class="kw">let </span><span class="kw-2">mut </span>name = name.replace(<span class="string">"::"</span>, <span class="string">"."</span>);

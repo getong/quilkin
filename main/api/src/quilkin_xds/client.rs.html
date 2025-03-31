@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/xds/src/client.rs`."><title>client.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="quilkin_xds" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/xds/src/client.rs`."><title>client.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="quilkin_xds" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0 (4d91de4e4 2025-02-17)" data-channel="1.85.0" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">quilkin_xds/</div>client.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -572,7 +573,43 @@
 <a href="#572" id="572">572</a>
 <a href="#573" id="573">573</a>
 <a href="#574" id="574">574</a>
-</pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -589,28 +626,29 @@
  */
 
 </span><span class="kw">use </span>std::{
-    sync::atomic::{AtomicBool, Ordering},
     sync::Arc,
+    sync::atomic::{AtomicBool, Ordering},
     time::Duration,
 };
 
+<span class="kw">use </span>eyre::ContextCompat;
 <span class="kw">use </span>futures::StreamExt;
 <span class="kw">use </span>rand::Rng;
-<span class="kw">use </span>tonic::transport::{channel::Channel <span class="kw">as </span>TonicChannel, Endpoint, Error <span class="kw">as </span>TonicError};
+<span class="kw">use </span>tonic::transport::{Endpoint, Error <span class="kw">as </span>TonicError, channel::Channel <span class="kw">as </span>TonicChannel};
 <span class="kw">use </span>tracing::Instrument;
 <span class="kw">use </span>tryhard::{
-    backoff_strategies::{BackoffStrategy, ExponentialBackoff},
     RetryFutureConfig, RetryPolicy,
+    backoff_strategies::{BackoffStrategy, ExponentialBackoff},
 };
 
 <span class="kw">use crate</span>::{
+    <span class="prelude-ty">Result</span>,
     core::Node,
     discovery::{
-        aggregated_discovery_service_client::AggregatedDiscoveryServiceClient,
         DeltaDiscoveryRequest, DeltaDiscoveryResponse, DiscoveryRequest, DiscoveryResponse,
+        aggregated_discovery_service_client::AggregatedDiscoveryServiceClient,
     },
     generated::quilkin::relay::v1alpha1::aggregated_control_plane_discovery_service_client::AggregatedControlPlaneDiscoveryServiceClient,
-    <span class="prelude-ty">Result</span>,
 };
 
 <span class="kw">type </span>AdsGrpcClient = AggregatedDiscoveryServiceClient&lt;TonicChannel&gt;;
@@ -643,10 +681,14 @@
     <span class="kw">async fn </span>connect_to_endpoint(
         endpoint: tonic::transport::Endpoint,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, tonic::transport::Error&gt; {
-        <span class="prelude-val">Ok</span>(AdsGrpcClient::connect(endpoint)
-            .<span class="kw">await</span><span class="question-mark">?
-            </span>.max_decoding_message_size(<span class="kw">crate</span>::config::max_grpc_message_size())
-            .max_encoding_message_size(<span class="kw">crate</span>::config::max_grpc_message_size()))
+        <span class="prelude-val">Ok</span>(AdsGrpcClient::connect(
+            endpoint
+                .tcp_keepalive(<span class="prelude-val">Some</span>(<span class="kw">crate</span>::HTTP2_KEEPALIVE_INTERVAL))
+                .timeout(<span class="kw">crate</span>::HTTP2_KEEPALIVE_TIMEOUT),
+        )
+        .<span class="kw">await</span><span class="question-mark">?
+        </span>.max_decoding_message_size(<span class="kw">crate</span>::config::max_grpc_message_size())
+        .max_encoding_message_size(<span class="kw">crate</span>::config::max_grpc_message_size()))
     }
 
     <span class="kw">async fn </span>stream_requests&lt;S: tonic::IntoStreamingRequest&lt;Message = <span class="self">Self</span>::Request&gt; + Send&gt;(
@@ -665,10 +707,14 @@
     <span class="kw">async fn </span>connect_to_endpoint(
         endpoint: tonic::transport::Endpoint,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, tonic::transport::Error&gt; {
-        <span class="prelude-val">Ok</span>(MdsGrpcClient::connect(endpoint)
-            .<span class="kw">await</span><span class="question-mark">?
-            </span>.max_decoding_message_size(<span class="kw">crate</span>::config::max_grpc_message_size())
-            .max_encoding_message_size(<span class="kw">crate</span>::config::max_grpc_message_size()))
+        <span class="prelude-val">Ok</span>(MdsGrpcClient::connect(
+            endpoint
+                .tcp_keepalive(<span class="prelude-val">Some</span>(<span class="kw">crate</span>::HTTP2_KEEPALIVE_INTERVAL))
+                .timeout(<span class="kw">crate</span>::HTTP2_KEEPALIVE_TIMEOUT),
+        )
+        .<span class="kw">await</span><span class="question-mark">?
+        </span>.max_decoding_message_size(<span class="kw">crate</span>::config::max_grpc_message_size())
+        .max_encoding_message_size(<span class="kw">crate</span>::config::max_grpc_message_size()))
     }
 
     <span class="kw">async fn </span>stream_requests&lt;S: tonic::IntoStreamingRequest&lt;Message = <span class="self">Self</span>::Request&gt; + Send&gt;(
@@ -719,20 +765,20 @@
             <span class="comment">// max delay + jitter of up to 2 seconds
             </span><span class="kw">let </span><span class="kw-2">mut </span>delay = backoff.delay(attempt, <span class="kw-2">&amp;</span>error).min(BACKOFF_MAX_DELAY);
             delay += Duration::from_millis(
-                rand::thread_rng().gen_range(<span class="number">0</span>..BACKOFF_MAX_JITTER.as_millis() <span class="kw">as _</span>),
+                rand::rng().random_range(<span class="number">0</span>..BACKOFF_MAX_JITTER.as_millis() <span class="kw">as _</span>),
             );
 
             <span class="kw">match </span>error {
-                RpcSessionError::InvalidEndpoint(<span class="kw-2">ref </span>error) =&gt; {
+                RpcSessionError::InvalidEndpoint(error) =&gt; {
                     <span class="macro">tracing::error!</span>(<span class="question-mark">?</span>error, <span class="string">"Error creating endpoint"</span>);
                     <span class="comment">// Do not retry if this is an invalid URL error that we cannot recover from.
                     </span>RetryPolicy::Break
                 }
-                RpcSessionError::InitialConnect(<span class="kw-2">ref </span>error) =&gt; {
+                RpcSessionError::InitialConnect(error) =&gt; {
                     <span class="macro">tracing::warn!</span>(<span class="question-mark">?</span>error, <span class="string">"Unable to connect to the XDS server"</span>);
                     RetryPolicy::Delay(delay)
                 }
-                RpcSessionError::Receive(<span class="kw-2">ref </span>status) =&gt; {
+                RpcSessionError::Receive(status) =&gt; {
                     <span class="macro">tracing::warn!</span>(status = <span class="question-mark">?</span>status, <span class="string">"Failed to receive response from XDS server"</span>);
                     RetryPolicy::Delay(delay)
                 }
@@ -790,7 +836,12 @@
         config: Arc&lt;C&gt;,
         is_healthy: Arc&lt;AtomicBool&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;DeltaSubscription, <span class="self">Self</span>&gt; {
+        <span class="kw">const </span>LEADERSHIP_CHECK_INTERVAL: std::time::Duration = std::time::Duration::from_secs(<span class="number">1</span>);
         <span class="kw">let </span>identifier = String::from(<span class="kw-2">&amp;*</span><span class="self">self</span>.identifier);
+
+        <span class="kw">while </span>config.is_leader() == <span class="prelude-val">Some</span>(<span class="bool-val">false</span>) {
+            tokio::time::sleep(LEADERSHIP_CHECK_INTERVAL).<span class="kw">await</span>;
+        }
 
         <span class="kw">let </span>(<span class="kw-2">mut </span>ds, <span class="kw-2">mut </span>stream) =
             <span class="kw">match </span>DeltaServerStream::connect(<span class="self">self</span>.client.clone(), identifier.clone()).<span class="kw">await </span>{
@@ -810,6 +861,12 @@
                 <span class="macro">tracing::trace!</span>(<span class="string">"starting relay client delta stream task"</span>);
 
                 <span class="kw">loop </span>{
+                    <span class="kw">if </span>config.is_leader() == <span class="prelude-val">Some</span>(<span class="bool-val">false</span>) {
+                        <span class="macro">tracing::debug!</span>(<span class="string">"not leader, delaying task"</span>);
+                        tokio::time::sleep(LEADERSHIP_CHECK_INTERVAL).<span class="kw">await</span>;
+                        <span class="kw">continue</span>;
+                    }
+
                     {
                         <span class="kw">let </span>control_plane = <span class="kw">super</span>::server::ControlPlane::from_arc(
                             config.clone(),
@@ -825,14 +882,23 @@
                         <span class="kw">let </span><span class="kw-2">mut </span>stream = control_plane.delta_aggregated_resources(stream).<span class="kw">await</span><span class="question-mark">?</span>;
                         is_healthy.store(<span class="bool-val">true</span>, Ordering::SeqCst);
 
-                        <span class="kw">while let </span><span class="prelude-val">Some</span>(result) = stream.next().<span class="kw">await </span>{
+                        <span class="kw">loop </span>{
+                            <span class="kw">if </span>config.is_leader() == <span class="prelude-val">Some</span>(<span class="bool-val">false</span>) {
+                                <span class="macro">tracing::warn!</span>(<span class="string">"lost leader lock mid-stream, disconnecting"</span>);
+                                <span class="kw">break</span>;
+                            }
+
+                            <span class="kw">let </span><span class="prelude-val">Some</span>(result) = stream.next().<span class="kw">await else </span>{
+                                <span class="kw">break</span>;
+                            };
+
                             <span class="kw">let </span>response = result<span class="question-mark">?</span>;
                             <span class="macro">tracing::trace!</span>(<span class="string">"received delta discovery response"</span>);
                             ds.send_response(response).<span class="kw">await</span><span class="question-mark">?</span>;
                         }
 
                         change_watcher.abort();
-                        <span class="kw">let _ </span>= change_watcher.<span class="kw">await</span>;
+                        <span class="kw">let </span>_unused = change_watcher.<span class="kw">await</span>;
                     }
 
                     is_healthy.store(<span class="bool-val">false</span>, Ordering::SeqCst);
@@ -985,7 +1051,7 @@
     /// management server does not support delta xDS we return the client as an error
     </span><span class="attr">#[allow(clippy::type_complexity)]
     </span><span class="kw">pub async fn </span>delta_subscribe&lt;C: <span class="kw">crate</span>::config::Configuration&gt;(
-        <span class="self">self</span>,
+        <span class="kw-2">mut </span><span class="self">self</span>,
         config: Arc&lt;C&gt;,
         is_healthy: Arc&lt;AtomicBool&gt;,
         notifier: <span class="prelude-ty">Option</span>&lt;tokio::sync::mpsc::UnboundedSender&lt;String&gt;&gt;,
@@ -1010,35 +1076,28 @@
             stream: <span class="kw-2">&amp;mut </span>tonic::Streaming&lt;DeltaDiscoveryResponse&gt;,
             resources: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Vec&lt;String&gt;)])],
         ) -&gt; eyre::Result&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>[(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Vec&lt;String&gt;)]&gt; {
-            <span class="kw">let </span>resource_subscriptions = <span class="kw">if let </span><span class="prelude-val">Some</span>(first) = stream.message().<span class="kw">await</span><span class="question-mark">? </span>{
-                <span class="kw">let </span><span class="kw-2">mut </span>rsubs = <span class="prelude-val">None</span>;
-                <span class="kw">if </span>first.type_url == <span class="string">"ignore-me" </span>{
-                    <span class="kw">if </span>!first.system_version_info.is_empty() {
-                        rsubs = resources.iter().find_map(|(vers, subs)| {
-                            (<span class="kw-2">*</span>vers == first.system_version_info).then_some(subs)
-                        });
+            <span class="kw">match </span>stream.message().<span class="kw">await</span><span class="question-mark">? </span>{
+                <span class="prelude-val">Some</span>(first) =&gt; {
+                    <span class="kw">if </span>first.type_url != <span class="string">"ignore-me" </span>{
+                        <span class="macro">tracing::warn!</span>(<span class="string">"expected `ignore-me` response from management server"</span>);
                     }
-                } <span class="kw">else </span>{
-                    <span class="macro">tracing::warn!</span>(<span class="string">"expected `ignore-me` response from management server"</span>);
-                }
 
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(subs) = rsubs {
-                    subs
-                } <span class="kw">else </span>{
-                    <span class="kw">let </span><span class="prelude-val">Some</span>(subs) = resources
+                    resources
                         .iter()
-                        .find_map(|(vers, subs)| vers.is_empty().then_some(subs))
-                    <span class="kw">else </span>{
-                        <span class="macro">eyre::bail!</span>(<span class="string">"failed to find fallback resource subscription set"</span>);
-                    };
-
-                    subs
+                        .find_map(|(vers, subs)| {
+                            (<span class="kw-2">*</span>vers == first.system_version_info).then_some(<span class="kw-2">*</span>subs)
+                        })
+                        .with_context(|| {
+                            <span class="macro">format!</span>(
+                                <span class="string">"failed to find resources with version `{}` to subscribe to"</span>,
+                                first.system_version_info
+                            )
+                        })
                 }
-            } <span class="kw">else </span>{
-                <span class="macro">eyre::bail!</span>(<span class="string">"expected at least one response from the management server"</span>);
-            };
-
-            <span class="prelude-val">Ok</span>(resource_subscriptions)
+                <span class="kw">_ </span>=&gt; {
+                    <span class="macro">eyre::bail!</span>(<span class="string">"expected at least one response from the management server"</span>);
+                }
+            }
         }
 
         <span class="kw">let </span>resource_subscriptions = <span class="kw">match </span>handle_first_response(<span class="kw-2">&amp;mut </span>stream, resources).<span class="kw">await </span>{
@@ -1096,7 +1155,14 @@
                                 <span class="kw">continue</span>;
                             }
                             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(error))) =&gt; {
-                                <span class="macro">tracing::warn!</span>(%error, <span class="string">"xds stream error"</span>);
+                                <span class="kw">if </span><span class="kw">crate</span>::is_broken_pipe(<span class="kw-2">&amp;</span>error) {
+                                    <span class="macro">tracing::info!</span>(
+                                        <span class="string">"remote {} terminated the connection"</span>,
+                                        <span class="self">self</span>.connected_endpoint.uri(),
+                                    );
+                                } <span class="kw">else </span>{
+                                    <span class="macro">tracing::warn!</span>(%error, <span class="string">"xds stream error"</span>);
+                                }
                                 <span class="kw">break</span>;
                             }
                             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
@@ -1115,14 +1181,22 @@
 
                     is_healthy.store(<span class="bool-val">false</span>, Ordering::SeqCst);
 
+                    <span class="comment">// Assume a new server we might connect to has completely different
+                    // state from the previous one, so get rid of our current state
+                    // and get a full refresh from the new relay, as well as
+                    // getting rid of any state the previously connected server gave us
+                    </span>local.clear(<span class="kw-2">&amp;</span>config, <span class="prelude-val">None</span>);
+
                     <span class="macro">tracing::info!</span>(<span class="string">"Lost connection to xDS, retrying"</span>);
-                    <span class="kw">let </span>(new_client, <span class="kw">_</span>) =
+                    <span class="kw">let </span>(new_client, new_endpoint) =
                         <span class="self">Self</span>::connect_with_backoff(<span class="kw-2">&amp;</span><span class="self">self</span>.management_servers).<span class="kw">await</span><span class="question-mark">?</span>;
 
                     (ds, stream) =
                         DeltaClientStream::connect(new_client, identifier.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
 
                     resource_subscriptions = handle_first_response(<span class="kw-2">&amp;mut </span>stream, resources).<span class="kw">await</span><span class="question-mark">?</span>;
+
+                    <span class="self">self</span>.connected_endpoint = new_endpoint;
 
                     ds.refresh(<span class="kw-2">&amp;</span>identifier, resource_subscriptions.to_vec(), <span class="kw-2">&amp;</span>local)
                         .<span class="kw">await</span><span class="question-mark">?</span>;

@@ -25,9 +25,9 @@
         <link rel="stylesheet" href="fonts/fonts.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="highlight.css">
-        <link rel="stylesheet" href="tomorrow-night.css">
-        <link rel="stylesheet" href="ayu-highlight.css">
+        <link rel="stylesheet" id="highlight-css" href="highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
 
@@ -185,6 +185,72 @@ depending on how deep an integration you wish for your system.</li>
 <li>Integration with Game Server hosting platforms such as <a href="https://agones.dev">Agones</a>.</li>
 <li>Can be integrated with C/C++ code bases via FFI.</li>
 </ul>
+<h2 id="quilkin-architecture"><a class="header" href="#quilkin-architecture">Quilkin Architecture</a></h2>
+<p>Quilkin is broken up into three main components</p>
+<ul>
+<li><strong>Providers</strong> are data collection sources to enable quilkin to see its environment.</li>
+<li><strong>Services</strong> provide the the core business logic for handling UDP traffic as well meta control-plane functionality.</li>
+<li><strong>Configuration</strong> controls what a given instance is able to do, what services it runs, and providers it pulls from.</li>
+</ul>
+<pre><code class="language-mermaid">architecture-beta
+    group services(cloud)[Services]
+    group public(cloud)[Public Client API] in services
+    group private(cloud)[Internal Service API] in services
+    group providers(cloud)[Providers]
+    group config(cloud)[Configuration]
+
+    service udp(internet)[UDP] in public
+    service qcmp(internet)[QCMP UDP] in public
+    junction sp1 in services
+    junction sp3 in services
+
+    service metrics(internet)[Administration] in private
+    service grpc(internet)[gRPC] in private
+    service http(internet)[HTTP] in private
+    junction sp2 in services
+    junction sp4 in services
+
+    service k8s(cloud)[Kubernetes] in providers
+    service fs(disk)[Filesystem] in providers
+    service xds(cloud)[gRPC] in providers
+    service cli(disk)[CLI] in providers
+    junction p1 in providers
+    junction p2 in providers
+
+    service filters(disk)[Filterchains] in config
+    service endpoints(disk)[Endpoints] in config
+    service gameservers(server)[Game Servers] in config
+    service mmdb(server)[Maxmind DB] in config
+    junction c1 in config
+    junction c2 in config
+
+    service quilkin(server)[Quilkin]
+
+    sp1:T -- R:udp
+    sp1:L -- R:qcmp
+    sp1:B -- T:sp3
+
+    sp2:T -- B:sp3
+    sp2:L -- R:grpc
+    sp2:B -- R:metrics
+    sp4:L -- R:metrics
+    sp4:B -- R:http
+    sp4:T -- B:sp2
+    sp3:R -- L:quilkin
+
+    quilkin:R -- L:p1
+    p1:T -- L:fs
+    p1:R -- L:k8s
+    p1:B -- T:p2
+    p2:R -- L:xds
+    p2:B -- L:cli
+    c2:L -- R:mmdb
+    c2:R -- L:gameservers
+    c1:T -- B:c2
+    c1:R -- L:endpoints
+    c1:L -- R:filters
+    c1:B -- T:quilkin
+</code></pre>
 <h2 id="what-next"><a class="header" href="#what-next">What Next?</a></h2>
 <p>Quilkin provides a variety of different services depending on your use-case.
 The primary service is <a href="./services/proxy.html"><code>proxy</code></a>, which runs a reverse UDP
@@ -198,27 +264,8 @@ proxy. To see a basic usage of the command-line interface run through the
 for deploying quilkin for your game network.</li>
 </ul>
 <pre><code class="language-shell">$ quilkin --help
-The Command-Line Interface for Quilkin
-
-Usage: quilkin [OPTIONS] &lt;COMMAND&gt;
-
-Commands:
-  agent                   Runs Quilkin as a relay service that runs a Manager Discovery Service (mDS) for accepting cluster and configuration information from xDS management services, and exposing it as a single merged xDS service for proxy services
-  generate-config-schema  Generates JSON schema files for known filters
-  manage                  Runs Quilkin as a xDS management server, using `provider` as a configuration source
-  qcmp                    
-  proxy                   Run Quilkin as a UDP reverse proxy
-  relay                   Runs Quilkin as a relay service that runs a Manager Discovery Service (mDS) for accepting cluster and configuration information from xDS management services, and exposing it as a single merged xDS service for proxy services
-  help                    Print this message or the help of the given subcommand(s)
-
-Options:
-      --no-admin                       Whether to spawn the admin server or not [env: NO_ADMIN=]
-  -c, --config &lt;CONFIG&gt;                The path to the configuration file for the Quilkin instance [env: QUILKIN_CONFIG=] [default: quilkin.yaml]
-      --admin-address &lt;ADMIN_ADDRESS&gt;  The port to bind for the admin server [env: QUILKIN_ADMIN_ADDRESS=]
-  -q, --quiet                          Whether Quilkin will report any results to stdout/stderr [env: QUIET=]
-      --log-format &lt;LOG_FORMAT&gt;        [default: auto] [possible values: auto, json, plain, pretty]
-  -h, --help                           Print help
-  -V, --version                        Print version
+{"timestamp":"2025-03-31T07:57:44.505844Z","level":"INFO","fields":{"message":"Starting Quilkin","version":"0.10.0-dev","commit":"beb9bc10e606766a6f39a68ec0a7839a00f64a3b"},"target":"quilkin::cli","filename":"src/cli.rs","threadId":"ThreadId(1)"}
+{"timestamp":"2025-03-31T07:57:44.506004Z","level":"ERROR","fields":{"message":"fatal error","error":"no service specified, shutting down"},"target":"quilkin","filename":"src/main.rs","threadId":"ThreadId(1)"}
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
 <p>There are variety of automated and manual methods for installing Quilkin onto
@@ -230,7 +277,7 @@ your local machine through <a href="installation.html#cargo">Cargo</a>.</p>
 <dl>
   <dt><strong>Source / Method</strong></dt>
   <dd>
-<pre><code>us-docker.pkg.dev/quilkin/release/quilkin:0.10.0-dev-632ec6a
+<pre><code>us-docker.pkg.dev/quilkin/release/quilkin:0.10.0-dev-beb9bc1
 </code></pre>
   </dd>
   <dt><strong>Notes</strong></dt>
@@ -394,23 +441,8 @@ command. This will forward the <a href="deployment/quickstarts/../admin.html">ad
 <p>Run the following to delete the Fleet and the accompanying ConfigMap:</p>
 <pre><code class="language-shell">kubectl delete -f  https://raw.githubusercontent.com/googleforgames/quilkin/main/examples/agones-xonotic-sidecar/sidecar.yaml
 </code></pre>
-<h2 id="6-agones-fleet-but-with-compression"><a class="header" href="#6-agones-fleet-but-with-compression">6. Agones Fleet, but with Compression</a></h2>
-<p>Let's take this one step further and compress the data between the Xonotic client and the server, without having to
-change either of them!</p>
-<p>Let's create a new Xonotic Fleet on our Agones cluster, but this time configured such that Quilkin will decompress
-packets that are incoming.</p>
-<p>Run the following:</p>
-<pre><code class="language-shell">kubectl apply -f https://raw.githubusercontent.com/googleforgames/quilkin/main/examples/agones-xonotic-sidecar/sidecar-compress.yaml
-</code></pre>
-<p>This will implement the <a href="deployment/quickstarts/../../services/proxy/filters/compress.html">Compress</a> filter in our Quilkin sidecar proxy in our new
-Fleet.</p>
-<p>Now you can run <code>kubectl get gameservers</code> until all your Agones <code>GameServers</code> are marked as <code>Ready</code> like so:</p>
-<pre><code class="language-shell">$ kubectl get gameservers
-NAME                                   STATE   ADDRESS         PORT   NODE                                    AGE
-xonotic-sidecar-compress-htc2x-84mzm   Ready   34.94.107.201   7534   gke-agones-default-pool-0f7d8adc-7w3c   7m25s
-xonotic-sidecar-compress-htc2x-sdp4k   Ready   34.94.107.201   7592   gke-agones-default-pool-0f7d8adc-7w3c   7m25s
-</code></pre>
-<h2 id="4-play-xonotic-through-quilkin"><a class="header" href="#4-play-xonotic-through-quilkin">4. Play Xonotic, through Quilkin</a></h2>
+<h2 id="6-play-xonotic-through-quilkin"><a class="header" href="#6-play-xonotic-through-quilkin">6. Play Xonotic, through Quilkin</a></h2>
+<p>Note: compression has been removed.</p>
 <p>What we will do in this step, is run Quilkin locally as a client-side proxy to compress the UDP data before it is
 sent up to our Xonotic servers that are expecting compressed data.</p>
 <p>First, grab a copy of the Quilkin configuration
@@ -950,60 +982,6 @@ proxies will route to the Allocated GameServer, and you can play a gamee!</p>
 </div>
 <p>"Proxy" is the primary Quilkin service, which acts as a non-transparent UDP
 proxy.</p>
-<p>To view all the options for the <code>proxy</code> subcommand, run:</p>
-<pre><code class="language-shell">$ quilkin proxy --help
-Run Quilkin as a UDP reverse proxy
-
-Usage: quilkin proxy [OPTIONS]
-
-Options:
-  -m, --management-server &lt;MANAGEMENT_SERVER&gt;
-          One or more `quilkin manage` endpoints to listen to for config changes
-          
-          [env: QUILKIN_MANAGEMENT_SERVER=]
-
-      --mmdb &lt;MMDB&gt;
-          The remote URL or local file path to retrieve the Maxmind database
-          
-          [env: MMDB=]
-
-  -p, --port &lt;PORT&gt;
-          The port to listen on
-          
-          [env: QUILKIN_PORT=]
-          [default: 7777]
-
-  -q, --qcmp-port &lt;QCMP_PORT&gt;
-          The port to listen on
-          
-          [env: QUILKIN_QCMP_PORT=]
-          [default: 7600]
-
-      --to &lt;TO&gt;
-          One or more socket addresses to forward packets to
-          
-          [env: QUILKIN_DEST=]
-
-      --to-tokens &lt;TO_TOKENS&gt;
-          Assigns dynamic tokens to each address in the `--to` argument
-          
-          Format is `&lt;number of unique tokens&gt;:&lt;length of token suffix for each packet&gt;`
-          
-          [env: QUILKIN_DEST_TOKENS=]
-
-      --idle-request-interval-secs &lt;IDLE_REQUEST_INTERVAL_SECS&gt;
-          The interval in seconds at which the relay will send a discovery request to an management server after receiving no updates
-          
-          [env: QUILKIN_IDLE_REQUEST_INTERVAL_SECS=]
-
-  -w, --workers &lt;WORKERS&gt;
-          Number of worker threads used to process packets. If not specified defaults to number of cpus
-          
-          [env: QUILKIN_WORKERS=]
-
-  -h, --help
-          Print help (see a summary with '-h')
-</code></pre>
 <h2 id="endpoints"><a class="header" href="#endpoints">Endpoints</a></h2>
 <p>An Endpoint represents an address that Quilkin forwards packets to that it has received from the
 source port.</p>
@@ -1054,6 +1032,44 @@ that Quilkin proxies traffic to.</p>
 <p>Sessions are established <em>after</em> the filter chain completes. The destination Endpoint of a packet is determined by
 the <a href="services/./proxy/filters.html">filter chain</a>, so a Session can only be created after filter chain completion. For example, if the
 filter chain drops all packets, then no session will ever be created.</p>
+<h2 id="diagram"><a class="header" href="#diagram">Diagram</a></h2>
+<pre><code class="language-mermaid">architecture-beta
+    group player(cloud)[Player]
+
+    service game(cloud)[Game] in player
+
+    game{group}:B --&gt; T:ioj{group}
+
+    group udpstack(cloud)[Quilkin Stack]
+    group services(server)[Service Layer] in udpstack
+
+    service providers(cloud)[Providers] in udpstack
+    service config(disk)[Configuration] in udpstack
+
+    providers:L --&gt; R:config
+    config:T --&gt; B:fc{group}
+
+    group bizlayer(cloud)[Packet Processing] in services
+    service fc(server)[Filter Chain] in bizlayer
+    service prefilters(server)[preprocessing] in bizlayer
+    service postfilters(server)[postprocessing] in bizlayer
+
+    prefilters:R --&gt; L:fc
+    fc:R --&gt; L:postfilters
+
+    group iolayer(cloud)[UDP layer] in services
+    service xdp(server)[XDP] in iolayer
+    service iouring(server)[io uring] in iolayer
+    junction ioj in iolayer
+    xdp:R -- L:ioj
+    iouring:L -- R:ioj
+    ioj:B --&gt; T:fc{group}
+
+    group gs(cloud)[Game Servers]
+    service gameserver(cloud)[Game Server] in gs
+
+    postfilters{group}:R --&gt; L:gameserver
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="configuration-file"><a class="header" href="#configuration-file">Configuration File</a></h1>
 <p>While much of Quilkin's proxy configuration can be configured via its
 <a href="services/proxy/../proxy.html">command line interface</a>, if you have a larger or more complex configuration
@@ -1161,14 +1177,13 @@ properties:
 <p>As an example, say we would like to perform the following steps in our processing pipeline to the packets we receive.</p>
 <ul>
 <li>Append a predetermined byte to the packet.</li>
-<li>Compress the packet.</li>
-<li>Do not forward (drop) the packet if its compressed length is over 512 bytes.</li>
+<li>Do not forward (drop) the packet if its length is over 512 bytes.</li>
 </ul>
 <p>We would create a filter corresponding to each step either by leveraging any <a href="services/proxy/filters.html#built-in-filters">existing filters</a>
 that do what we want or and connect them to form the following filter chain:</p>
-<pre><code class="language-bash">append | compress | drop
+<pre><code class="language-bash">append | drop
 </code></pre>
-<p>When Quilkin consults our filter chain, it feeds the received packet into <code>append</code> and forwards the packet it receives (if any) from <code>drop</code> - i.e the output of <code>append</code> becomes the <code>input</code> into <code>compress</code> and so on in that order.</p>
+<p>When Quilkin consults our filter chain, it feeds the received packet into <code>append</code> and forwards the packet it receives (if any) from <code>drop</code> - i.e the output of <code>append</code> becomes the <code>input</code> into <code>drop</code> and so on in that order.</p>
 <p>There are a few things we note here:</p>
 <ul>
 <li>
@@ -1228,7 +1243,6 @@ Consequently, we can build a filter chain with a [CaptureBytes] filter preceedin
 <p>Quilkin includes several filters out of the box.</p>
 <div class="table-wrapper"><table><thead><tr><th>Filter</th><th>Description</th></tr></thead><tbody>
 <tr><td><a href="services/proxy/./filters/capture.html">Capture</a></td><td>Capture specific bytes from a packet and store them in <a href="services/proxy/filters.html#filter-dynamic-metadata">filter dynamic metadata</a>.</td></tr>
-<tr><td><a href="services/proxy/./filters/compress.html">Compress</a></td><td>Compress and decompress packets data.</td></tr>
 <tr><td><a href="services/proxy/./filters/concatenate.html">Concatenate</a></td><td>Add authentication tokens to packets.</td></tr>
 <tr><td><a href="services/proxy/./filters/debug.html">Debug</a></td><td>Logs every packet.</td></tr>
 <tr><td><a href="services/proxy/./filters/drop.html">Drop</a></td><td>Drop all packets</td></tr>
@@ -1373,113 +1387,13 @@ definitions:
           description: The regular expression to use for capture.
           type: string
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="compress"><a class="header" href="#compress">Compress</a></h1>
-<p>The <code>Compress</code> filter's job is to provide a variety of compression implementations for compression
-and subsequent decompression of UDP data when sent between systems, such as a game client and game server.</p>
-<h2 id="filter-name-1"><a class="header" href="#filter-name-1">Filter name</a></h2>
-<pre><code class="language-text">quilkin.filters.compress.v1alpha1.Compress
-</code></pre>
-<h2 id="configuration-examples-2"><a class="header" href="#configuration-examples-2">Configuration Examples</a></h2>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span><span class="boring">let yaml = "
-</span>version: v1alpha1
-filters:
-  - name: quilkin.filters.compress.v1alpha1.Compress
-    config:
-        on_read: COMPRESS
-        on_write: DECOMPRESS
-        mode: SNAPPY
-clusters:
-  - endpoints:
-    - address: 127.0.0.1:7001
-<span class="boring">";
-</span><span class="boring">let config = quilkin::config::Config::from_reader(yaml.as_bytes()).unwrap();
-</span><span class="boring">assert_eq!(config.filters.load().len(), 1);
-</span><span class="boring">}</span></code></pre></pre>
-<p>The above example shows a proxy that could be used with a typical game client, where the original client data is
-sent to the local listening port and then compressed when heading up to a dedicated game server, and then
-decompressed when traffic is returned from the dedicated game server before being handed back to game client.</p>
-<blockquote>
-<p>It is worth noting that since the Compress filter modifies the <em>entire packet</em>, it is worth paying special
-attention to the order it is placed in your <a href="services/proxy/filters/../filters.html">Filter configuration</a>. Most of the time it will likely be
-the first or last Filter configured to ensure it is compressing the entire set of data being sent.</p>
-</blockquote>
-<h2 id="configuration-options-rust-doc-1"><a class="header" href="#configuration-options-rust-doc-1">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/compress/struct.Config.html">Rust Doc</a>)</a></h2>
-<pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
-title: Config
-type: object
-required:
-- on_read
-- on_write
-properties:
-  mode:
-    default: SNAPPY
-    allOf:
-    - $ref: '#/definitions/Mode'
-  on_read:
-    $ref: '#/definitions/Action'
-  on_write:
-    $ref: '#/definitions/Action'
-definitions:
-  Action:
-    description: Whether to do nothing, compress or decompress the packet.
-    type: string
-    enum:
-    - DO_NOTHING
-    - COMPRESS
-    - DECOMPRESS
-  Mode:
-    description: The library to use when compressing.
-    type: string
-    enum:
-    - SNAPPY
-    - LZ4
-</code></pre>
-<h2 id="compression-modes"><a class="header" href="#compression-modes">Compression Modes</a></h2>
-<h3 id="snappy"><a class="header" href="#snappy">Snappy</a></h3>
-<blockquote>
-<p>Snappy is a compression/decompression library. It does not aim for maximum compression, or compatibility with any
-other compression library; instead, it aims for very high speeds and reasonable compression.</p>
-</blockquote>
-<p>This compression method is provided by <a href="https://github.com/BurntSushi/rust-snappy">rust-snappy</a>.</p>
-<p>Due to the small size of packets, this only encodes and decodes the non-streaming version of the format described <a href="https://github.com/google/snappy/blob/main/format_description.txt">here</a>.</p>
-<pre><code class="language-yaml">- name: quilkin.filters.compress.v1alpha1.Compress
-    config:
-        on_read: COMPRESS
-        on_write: DECOMPRESS
-        mode: SNAPPY
-</code></pre>
-<h3 id="lz4"><a class="header" href="#lz4">LZ4</a></h3>
-<blockquote>
-<p>LZ4 is lossless compression algorithm, providing compression speed &gt; 500 MB/s per core, scalable with multi-cores CPU.
-It features an extremely fast decoder, with speed in multiple GB/s per core, typically reaching RAM speed limits on
-multi-core systems.</p>
-</blockquote>
-<p>This compression method is provided by <a href="https://github.com/PSeitz/lz4_flex">lz4_flex</a>.</p>
-<p>Due to the small size of packets, this only encodes and decodes the block version of the format described. If your game client/server itself is performing LZ4 de/compression it needs to encode or
-decode a varint of the uncompressed packet size (maximum 2^16) since that is not part of the LZ4 block
-format. The varint is of the same exact form as that used by <a href="https://github.com/google/snappy/blob/27f34a580be4a3becf5f8c0cba13433f53c21337/format_description.txt#L20-L25">snappy</a>.</p>
-<pre><code class="language-yaml">- name: quilkin.filters.compress.v1alpha1.Compress
-    config:
-        on_read: COMPRESS
-        on_write: DECOMPRESS
-        mode: LZ4
-</code></pre>
-<h2 id="metrics"><a class="header" href="#metrics">Metrics</a></h2>
-<ul>
-<li><code>quilkin_filter_int_counter{label="compressed_bytes_total"}</code>
-Total number of compressed bytes either received or sent.</li>
-<li><code>quilkin_filter_int_counter{label="decompressed_bytes_total"}</code>
-Total number of decompressed bytes either received or sent.</li>
-</ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="concatenate"><a class="header" href="#concatenate">Concatenate</a></h1>
 <p>The <code>Concatenate</code> filter's job is to add a byte packet to either the beginning or end of each UDP packet that passes
 through. This is commonly used to provide an auth token to each packet, so they can be routed appropriately.</p>
-<h2 id="filter-name-2"><a class="header" href="#filter-name-2">Filter name</a></h2>
+<h2 id="filter-name-1"><a class="header" href="#filter-name-1">Filter name</a></h2>
 <pre><code class="language-text">quilkin.filters.concatenate.v1alpha1.Concatenate
 </code></pre>
-<h2 id="configuration-examples-3"><a class="header" href="#configuration-examples-3">Configuration Examples</a></h2>
+<h2 id="configuration-examples-2"><a class="header" href="#configuration-examples-2">Configuration Examples</a></h2>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">let yaml = "
@@ -1497,7 +1411,7 @@ clusters:
 </span><span class="boring">let config = quilkin::config::Config::from_reader(yaml.as_bytes()).unwrap();
 </span><span class="boring">assert_eq!(config.filters.load().len(), 1);
 </span><span class="boring">}</span></code></pre></pre>
-<h2 id="configuration-options-rust-doc-2"><a class="header" href="#configuration-options-rust-doc-2">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/concatenate/struct.Config.html">Rust Doc</a>)</a></h2>
+<h2 id="configuration-options-rust-doc-1"><a class="header" href="#configuration-options-rust-doc-1">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/concatenate/struct.Config.html">Rust Doc</a>)</a></h2>
 <pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
 title: Config
 description: Config represents a `Concatenate` filter configuration.
@@ -1532,10 +1446,10 @@ definitions:
 <div style="break-before: page; page-break-before: always;"></div><h1 id="debug"><a class="header" href="#debug">Debug</a></h1>
 <p>The Debug filter logs all incoming and outgoing packets to standard output.</p>
 <p>This filter is useful in debugging deployments where the packets strictly contain valid <code>UTF-8</code> encoded strings. A generic error message is instead logged if conversion from bytes to <code>UTF-8</code> fails.</p>
-<h3 id="filter-name-3"><a class="header" href="#filter-name-3">Filter name</a></h3>
+<h3 id="filter-name-2"><a class="header" href="#filter-name-2">Filter name</a></h3>
 <pre><code class="language-text">quilkin.filters.debug_filter.v1alpha1.Debug
 </code></pre>
-<h2 id="configuration-examples-4"><a class="header" href="#configuration-examples-4">Configuration Examples</a></h2>
+<h2 id="configuration-examples-3"><a class="header" href="#configuration-examples-3">Configuration Examples</a></h2>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">let yaml = "
@@ -1551,7 +1465,7 @@ clusters:
 </span><span class="boring">let config = quilkin::config::Config::from_reader(yaml.as_bytes()).unwrap();
 </span><span class="boring">assert_eq!(config.filters.load().len(), 1);
 </span><span class="boring">}</span></code></pre></pre>
-<h2 id="configuration-options-rust-doc-3"><a class="header" href="#configuration-options-rust-doc-3">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/debug/struct.Config.html">Rust Doc</a>)</a></h2>
+<h2 id="configuration-options-rust-doc-2"><a class="header" href="#configuration-options-rust-doc-2">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/debug/struct.Config.html">Rust Doc</a>)</a></h2>
 <pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
 title: Config
 description: A Debug filter's configuration.
@@ -1566,10 +1480,10 @@ properties:
 <div style="break-before: page; page-break-before: always;"></div><h1 id="drop"><a class="header" href="#drop">Drop</a></h1>
 <p>The <code>Drop</code> filter always drops any packet passed through it. This is useful in
 combination with conditional flow filters like <a href="services/proxy/filters/match.html"><code>Matches</code></a></p>
-<h2 id="filter-name-4"><a class="header" href="#filter-name-4">Filter name</a></h2>
+<h2 id="filter-name-3"><a class="header" href="#filter-name-3">Filter name</a></h2>
 <pre><code class="language-text">quilkin.filters.drop.v1alpha1.Drop
 </code></pre>
-<h2 id="configuration-examples-5"><a class="header" href="#configuration-examples-5">Configuration Examples</a></h2>
+<h2 id="configuration-examples-4"><a class="header" href="#configuration-examples-4">Configuration Examples</a></h2>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">let yaml = "
@@ -1603,10 +1517,10 @@ filters:
 <div style="break-before: page; page-break-before: always;"></div><h1 id="firewall"><a class="header" href="#firewall">Firewall</a></h1>
 <p>The <code>Firewall</code> filter's job is to allow or block traffic depending on if the incoming traffic's IP and port matches
 the rules set on the Firewall filter.</p>
-<h2 id="filter-name-5"><a class="header" href="#filter-name-5">Filter name</a></h2>
+<h2 id="filter-name-4"><a class="header" href="#filter-name-4">Filter name</a></h2>
 <pre><code class="language-text">quilkin.filters.firewall.v1alpha1.Firewall
 </code></pre>
-<h2 id="configuration-examples-6"><a class="header" href="#configuration-examples-6">Configuration Examples</a></h2>
+<h2 id="configuration-examples-5"><a class="header" href="#configuration-examples-5">Configuration Examples</a></h2>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">let yaml = "
@@ -1634,7 +1548,7 @@ clusters:
 </span><span class="boring">let config = quilkin::config::Config::from_reader(yaml.as_bytes()).unwrap();
 </span><span class="boring">assert_eq!(config.filters.load().len(), 1);
 </span><span class="boring">}</span></code></pre></pre>
-<h2 id="configuration-options-rust-doc-4"><a class="header" href="#configuration-options-rust-doc-4">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/firewall/struct.Config.html">Rust Doc</a>)</a></h2>
+<h2 id="configuration-options-rust-doc-3"><a class="header" href="#configuration-options-rust-doc-3">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/firewall/struct.Config.html">Rust Doc</a>)</a></h2>
 <pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
 title: Config
 description: Represents how a Firewall filter is configured for read and write operations.
@@ -1715,10 +1629,10 @@ rule deciding if the request is allowed or denied:</p>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="loadbalancer"><a class="header" href="#loadbalancer">LoadBalancer</a></h1>
 <p>The <code>LoadBalancer</code> filter distributes packets received downstream among all upstream endpoints.</p>
-<h2 id="filter-name-6"><a class="header" href="#filter-name-6">Filter name</a></h2>
+<h2 id="filter-name-5"><a class="header" href="#filter-name-5">Filter name</a></h2>
 <pre><code class="language-text">quilkin.filters.load_balancer.v1alpha1.LoadBalancer
 </code></pre>
-<h2 id="configuration-examples-7"><a class="header" href="#configuration-examples-7">Configuration Examples</a></h2>
+<h2 id="configuration-examples-6"><a class="header" href="#configuration-examples-6">Configuration Examples</a></h2>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#[tokio::main]
 </span><span class="boring">async fn main() {
 </span><span class="boring">  let yaml = "
@@ -1736,7 +1650,7 @@ clusters:
 </span><span class="boring">}</span></code></pre></pre>
 <p>The load balancing policy (the strategy to use to select what endpoint to send traffic to) is configurable.
 In the example above, packets will be distributed by selecting endpoints in turn, in round robin fashion.</p>
-<h2 id="configuration-options-rust-doc-5"><a class="header" href="#configuration-options-rust-doc-5">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/load_balancer/struct.Config.html">Rust Doc</a>)</a></h2>
+<h2 id="configuration-options-rust-doc-4"><a class="header" href="#configuration-options-rust-doc-4">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/load_balancer/struct.Config.html">Rust Doc</a>)</a></h2>
 <pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
 title: Config
 description: The configuration for [`load_balancer`][super].
@@ -1766,10 +1680,10 @@ definitions:
 <div style="break-before: page; page-break-before: always;"></div><h1 id="localratelimit"><a class="header" href="#localratelimit">LocalRateLimit</a></h1>
 <p>The LocalRateLimit filter controls the frequency at which packets received downstream are forwarded upstream by the proxy.
 Rate limiting is done independently per source (IP, Port) combination.</p>
-<h2 id="filter-name-7"><a class="header" href="#filter-name-7">Filter name</a></h2>
+<h2 id="filter-name-6"><a class="header" href="#filter-name-6">Filter name</a></h2>
 <pre><code class="language-text">quilkin.filters.local_rate_limit.v1alpha1.LocalRateLimit
 </code></pre>
-<h2 id="configuration-examples-8"><a class="header" href="#configuration-examples-8">Configuration Examples</a></h2>
+<h2 id="configuration-examples-7"><a class="header" href="#configuration-examples-7">Configuration Examples</a></h2>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">// Wrap this example within an async main function since the
 </span><span class="boring">// local_rate_limit filter spawns a task on initialization
 </span><span class="boring">#[tokio::main]
@@ -1798,7 +1712,7 @@ For example, a configuration allowing 1000 packets per second could potentially 
 <blockquote>
 <p>Packets that that exceeds the maximum configured rate are dropped.</p>
 </blockquote>
-<h2 id="configuration-options-rust-doc-6"><a class="header" href="#configuration-options-rust-doc-6">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/local_rate_limit/struct.Config.html">Rust Doc</a>)</a></h2>
+<h2 id="configuration-options-rust-doc-5"><a class="header" href="#configuration-options-rust-doc-5">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/local_rate_limit/struct.Config.html">Rust Doc</a>)</a></h2>
 <pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
 title: Config
 description: Config represents a [self]'s configuration.
@@ -1813,7 +1727,7 @@ properties:
     format: uint
     minimum: 0.0
   period:
-    description: The duration in seconds during which max_packets applies. If none is provided, it defaults to one second.
+    description: The duration in seconds during which `max_packets` applies. If none is provided, it defaults to one second.
     type: integer
     format: uint32
     minimum: 0.0
@@ -1822,10 +1736,10 @@ properties:
 <p>The <code>Match</code> filter's job is to provide a mechanism to change behaviour based
 on dynamic metadata. This filter behaves similarly to the <code>match</code> expression
 in Rust or <code>switch</code> statements in other languages.</p>
-<h2 id="filter-name-8"><a class="header" href="#filter-name-8">Filter name</a></h2>
+<h2 id="filter-name-7"><a class="header" href="#filter-name-7">Filter name</a></h2>
 <pre><code class="language-text">quilkin.filters.match.v1alpha1.Match
 </code></pre>
-<h2 id="configuration-examples-9"><a class="header" href="#configuration-examples-9">Configuration Examples</a></h2>
+<h2 id="configuration-examples-8"><a class="header" href="#configuration-examples-8">Configuration Examples</a></h2>
 <!-- ANCHOR: example -->
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -1856,7 +1770,7 @@ filters:
 </span><span class="boring">assert_eq!(config.filters.load().len(), 2);
 </span><span class="boring">}</span></code></pre></pre>
 <!--  ANCHOR_END: example -->
-<h2 id="configuration-options-rust-doc-7"><a class="header" href="#configuration-options-rust-doc-7">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/match/struct.Config.html">Rust Doc</a>)</a></h2>
+<h2 id="configuration-options-rust-doc-6"><a class="header" href="#configuration-options-rust-doc-6">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/match/struct.Config.html">Rust Doc</a>)</a></h2>
 <pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
 title: Config
 description: Configuration for [`Match`][super::Match].
@@ -1950,7 +1864,7 @@ definitions:
         minimum: 0.0
 </code></pre>
 <p>View the <a href="services/proxy/filters/../../../../api/quilkin/filters/match/struct.Config.html">Match</a> filter documentation for more details.</p>
-<h2 id="metrics-1"><a class="header" href="#metrics-1">Metrics</a></h2>
+<h2 id="metrics"><a class="header" href="#metrics">Metrics</a></h2>
 <ul>
 <li><code>quilkin_filter_int_counter{label="packets_matched_total"}</code>
 A counter of the total number of packets where the dynamic metadata matches a branch value.</li>
@@ -1960,10 +1874,10 @@ A counter of the total number of packets that are processed by the fallthrough c
 <div style="break-before: page; page-break-before: always;"></div><h1 id="pass"><a class="header" href="#pass">Pass</a></h1>
 <p>The <code>Pass</code> filter that always passes any packet through it. This is useful in
 combination with conditional flow filters like <a href="services/proxy/filters/match.html"><code>Matches</code></a></p>
-<h2 id="filter-name-9"><a class="header" href="#filter-name-9">Filter name</a></h2>
+<h2 id="filter-name-8"><a class="header" href="#filter-name-8">Filter name</a></h2>
 <pre><code class="language-text">quilkin.filters.pass.v1alpha1.Pass
 </code></pre>
-<h2 id="configuration-examples-10"><a class="header" href="#configuration-examples-10">Configuration Examples</a></h2>
+<h2 id="configuration-examples-9"><a class="header" href="#configuration-examples-9">Configuration Examples</a></h2>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">let yaml = "
@@ -1998,10 +1912,10 @@ filters:
 <p>The <code>Timestamp</code> filter accepts a UNIX timestamp from metadata and observes the
 duration between that timestamp and now. Mostly useful in combination with other
 filters such as <code>Capture</code> to pull timestamp data from packets.</p>
-<h2 id="filter-name-10"><a class="header" href="#filter-name-10">Filter name</a></h2>
+<h2 id="filter-name-9"><a class="header" href="#filter-name-9">Filter name</a></h2>
 <pre><code class="language-text">quilkin.filters.timestamp.v1alpha1.Timestamp
 </code></pre>
-<h2 id="configuration-examples-11"><a class="header" href="#configuration-examples-11">Configuration Examples</a></h2>
+<h2 id="configuration-examples-10"><a class="header" href="#configuration-examples-10">Configuration Examples</a></h2>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">let yaml = "
@@ -2022,7 +1936,7 @@ clusters:
 <span class="boring">";
 </span><span class="boring">let config = quilkin::config::Config::from_reader(yaml.as_bytes()).unwrap();
 </span><span class="boring">}</span></code></pre></pre>
-<h2 id="configuration-options-rust-doc-8"><a class="header" href="#configuration-options-rust-doc-8">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/timestamp/struct.Config.html">Rust Doc</a>)</a></h2>
+<h2 id="configuration-options-rust-doc-7"><a class="header" href="#configuration-options-rust-doc-7">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/timestamp/struct.Config.html">Rust Doc</a>)</a></h2>
 <pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
 title: Config
 description: Config represents a [self]'s configuration.
@@ -2039,7 +1953,7 @@ definitions:
     description: A key in the metadata table.
     type: string
 </code></pre>
-<h2 id="metrics-2"><a class="header" href="#metrics-2">Metrics</a></h2>
+<h2 id="metrics-1"><a class="header" href="#metrics-1">Metrics</a></h2>
 <ul>
 <li><code>quilkin_filter_histogram{label="duration"}</code>
 A histogram of durations from <code>metadata_key</code> to now in the packet <code>direction</code>.</li>
@@ -2049,10 +1963,10 @@ A histogram of durations from <code>metadata_key</code> to now in the packet <co
 <p>This Filter provides this functionality by comparing a byte array token found in the
 <a href="services/proxy/filters/../filters.html#filter-dynamic-metadata">Filter Dynamic Metadata</a> from a previous Filter, and comparing it to
 <a href="services/proxy/filters/../../proxy.html#endpoints">Endpoint's tokens</a>, and sending packets to those Endpoints only if there is a match.</p>
-<h2 id="filter-name-11"><a class="header" href="#filter-name-11">Filter name</a></h2>
+<h2 id="filter-name-10"><a class="header" href="#filter-name-10">Filter name</a></h2>
 <pre><code class="language-text">quilkin.filters.token_router.v1alpha1.TokenRouter
 </code></pre>
-<h2 id="configuration-examples-12"><a class="header" href="#configuration-examples-12">Configuration Examples</a></h2>
+<h2 id="configuration-examples-11"><a class="header" href="#configuration-examples-11">Configuration Examples</a></h2>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">let yaml = "
@@ -2079,7 +1993,7 @@ clusters:
 </span><span class="boring">assert_eq!(config.filters.load().len(), 1);
 </span><span class="boring">}</span></code></pre></pre>
 <p>View the <a href="services/proxy/filters/capture.html">CaptureBytes</a> filter documentation for more details.</p>
-<h2 id="configuration-options-rust-doc-9"><a class="header" href="#configuration-options-rust-doc-9">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/token_router/struct.Config.html">Rust Doc</a>)</a></h2>
+<h2 id="configuration-options-rust-doc-8"><a class="header" href="#configuration-options-rust-doc-8">Configuration Options (<a href="services/proxy/filters/../../../../api/quilkin/filters/token_router/struct.Config.html">Rust Doc</a>)</a></h2>
 <pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
 title: Config
 type: object
@@ -2094,7 +2008,7 @@ definitions:
     description: A key in the metadata table.
     type: string
 </code></pre>
-<h2 id="metrics-3"><a class="header" href="#metrics-3">Metrics</a></h2>
+<h2 id="metrics-2"><a class="header" href="#metrics-2">Metrics</a></h2>
 <ul>
 <li><code>quilkin_filter_TokenRouter_packets_dropped_total</code>
 A counter of the total number of packets that have been dropped. This is also provided with a <code>Reason</code> label, as there
@@ -2239,6 +2153,41 @@ more accurately represent the location of any datacentre.</p>
 request to the QCMP port.</p>
 <p>The returned data is a JSON object with each key being the ICAO code for the
 datacentre, and the value being the latency in nanoseconds.</p>
+<h2 id="metrics-3"><a class="header" href="#metrics-3">Metrics</a></h2>
+<ul>
+<li>
+<p><code>quilkin_phoenix_requests</code></p>
+<p>The amount of phoenix (latency) requests</p>
+</li>
+<li>
+<p><code>quilkin_phoenix_task_closed</code></p>
+<p>Whether the phoenix latency measurement task has shutdown</p>
+</li>
+<li>
+<p><code>quilkin_phoenix_server_errors</code></p>
+<p>The amount of errors attempting to spawn the phoenix HTTP server</p>
+</li>
+<li>
+<p><code>quilkin_service_qcmp_active</code></p>
+<p>Whether the QCMP service is currently running, either 1 for running or 0 for not.</p>
+</li>
+<li>
+<p><code>quilkin_service_qcmp_bytes_total{kind, asn, ip_prefix}</code></p>
+<p>Total number of bytes processed through QCMP. <code>kind</code> is either <code>valid</code>, <code>invalid</code>, or <code>unsupported</code>.</p>
+</li>
+<li>
+<p><code>quilkin_service_qcmp_errors_total{asn, ip_prefix}</code></p>
+<p>Total number of errors QCMP has encountered.</p>
+</li>
+<li>
+<p><code>quilkin_service_qcmp_packets_total{kind, asn, ip_prefix}</code></p>
+<p>Total number of packets processed through QCMP. <code>kind</code> is either <code>valid</code>, <code>invalid</code>, or <code>unsupported</code>.</p>
+</li>
+<li>
+<p><code>quilkin_service_qcmp_ingress_latency_seconds{asn, ip_prefix}</code></p>
+<p>The time from when the client created the packet, to when QCMP received it.</p>
+</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="proxy-metrics"><a class="header" href="#proxy-metrics">Proxy Metrics</a></h1>
 <p>The following are metrics that Quilkin provides while in Proxy Mode.</p>
 <h1 id="asn-maxmind-information"><a class="header" href="#asn-maxmind-information">ASN Maxmind Information</a></h1>
@@ -2296,7 +2245,7 @@ knows of rather than those that it is connected to (see <a href="services/proxy/
 </li>
 <li>
 <p><code>quilkin_bytes_total{event, asn, ip_prefix}</code></p>
-<p>The total number of bytes sent or recieved</p>
+<p>The total number of bytes sent or received</p>
 <ul>
 <li>The <code>event</code> label is either:
 <ul>
@@ -2325,6 +2274,14 @@ knows of rather than those that it is connected to (see <a href="services/proxy/
 <li>
 <p><code>quilkin_errors_total{event, asn, ip_prefix}</code></p>
 <p>The total number of errors encountered while reading a packet from the upstream endpoint.</p>
+</li>
+<li>
+<p><code>quilkin_game_traffic_tasks</code></p>
+<p>The amount of game traffic tasks that have spawned</p>
+</li>
+<li>
+<p><code>quilkin_game_traffic_task_closed</code></p>
+<p>The amount of game traffic tasks that have shutdown</p>
 </li>
 </ul>
 <h2 id="session-metrics"><a class="header" href="#session-metrics">Session Metrics</a></h2>
@@ -2408,9 +2365,6 @@ Commands:
 Options:
   -r, --relay &lt;RELAY&gt;                One or more `quilkin relay` endpoints to push configuration changes to [env: QUILKIN_MANAGEMENT_SERVER=]
   -p, --port &lt;PORT&gt;                  The TCP port to listen to, to serve discovery responses [env: QUILKIN_PORT=] [default: 7800]
-      --region &lt;REGION&gt;              The `region` to set in the cluster map for any provider endpoints discovered [env: QUILKIN_REGION=]
-      --zone &lt;ZONE&gt;                  The `zone` in the `region` to set in the cluster map for any provider endpoints discovered [env: QUILKIN_ZONE=]
-      --sub-zone &lt;SUB_ZONE&gt;          The `sub_zone` in the `zone` in the `region` to set in the cluster map for any provider endpoints discovered [env: QUILKIN_SUB_ZONE=]
       --address-type &lt;ADDRESS_TYPE&gt;  If specified, filters the available gameserver addresses to the one that matches the specified type
       --ip-kind &lt;IP_KIND&gt;            If specified, additionally filters the gameserver address by its ip kind [default: any] [possible values: v4, v6, any]
   -h, --help                         Print help
@@ -2664,26 +2618,6 @@ clusters:
 </ul>
 </li>
 <li>
-<p><a href="services/xds/proto/index.html#quilkin_filters_compress_v1alpha1_compress-proto">quilkin/filters/compress/v1alpha1/compress.proto</a></p>
-<ul>
-<li>
-<p><a href="services/xds/proto/index.html#quilkin-filters-compress-v1alpha1-Compress">Compress</a></p>
-</li>
-<li>
-<p><a href="services/xds/proto/index.html#quilkin-filters-compress-v1alpha1-Compress-ActionValue">Compress.ActionValue</a></p>
-</li>
-<li>
-<p><a href="services/xds/proto/index.html#quilkin-filters-compress-v1alpha1-Compress-ModeValue">Compress.ModeValue</a></p>
-</li>
-<li>
-<p><a href="services/xds/proto/index.html#quilkin-filters-compress-v1alpha1-Compress-Action">Compress.Action</a></p>
-</li>
-<li>
-<p><a href="services/xds/proto/index.html#quilkin-filters-compress-v1alpha1-Compress-Mode">Compress.Mode</a></p>
-</li>
-</ul>
-</li>
-<li>
 <p><a href="services/xds/proto/index.html#quilkin_filters_concatenate_v1alpha1_concatenate-proto">quilkin/filters/concatenate/v1alpha1/concatenate.proto</a></p>
 <ul>
 <li>
@@ -2897,44 +2831,6 @@ of xDS servers to connect to in the relay itself.</p>
 <tr><td>remove</td><td><a href="services/xds/proto/index.html#google-protobuf-BoolValue">google.protobuf.BoolValue</a></td><td></td><td></td></tr>
 </tbody></table>
 </div>
-<p><a name="quilkin_filters_compress_v1alpha1_compress-proto"></a></p>
-<p align="right"><a href="services/xds/proto/index.html#top">Top</a></p>
-<h2 id="quilkinfilterscompressv1alpha1compressproto"><a class="header" href="#quilkinfilterscompressv1alpha1compressproto">quilkin/filters/compress/v1alpha1/compress.proto</a></h2>
-<p><a name="quilkin-filters-compress-v1alpha1-Compress"></a></p>
-<h3 id="compress-1"><a class="header" href="#compress-1">Compress</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Type</th><th>Label</th><th>Description</th></tr></thead><tbody>
-<tr><td>mode</td><td><a href="services/xds/proto/index.html#quilkin-filters-compress-v1alpha1-Compress-ModeValue">Compress.ModeValue</a></td><td></td><td></td></tr>
-<tr><td>on_read</td><td><a href="services/xds/proto/index.html#quilkin-filters-compress-v1alpha1-Compress-ActionValue">Compress.ActionValue</a></td><td></td><td></td></tr>
-<tr><td>on_write</td><td><a href="services/xds/proto/index.html#quilkin-filters-compress-v1alpha1-Compress-ActionValue">Compress.ActionValue</a></td><td></td><td></td></tr>
-</tbody></table>
-</div>
-<p><a name="quilkin-filters-compress-v1alpha1-Compress-ActionValue"></a></p>
-<h3 id="compressactionvalue"><a class="header" href="#compressactionvalue">Compress.ActionValue</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Type</th><th>Label</th><th>Description</th></tr></thead><tbody>
-<tr><td>value</td><td><a href="services/xds/proto/index.html#quilkin-filters-compress-v1alpha1-Compress-Action">Compress.Action</a></td><td></td><td></td></tr>
-</tbody></table>
-</div>
-<p><a name="quilkin-filters-compress-v1alpha1-Compress-ModeValue"></a></p>
-<h3 id="compressmodevalue"><a class="header" href="#compressmodevalue">Compress.ModeValue</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Type</th><th>Label</th><th>Description</th></tr></thead><tbody>
-<tr><td>value</td><td><a href="services/xds/proto/index.html#quilkin-filters-compress-v1alpha1-Compress-Mode">Compress.Mode</a></td><td></td><td></td></tr>
-</tbody></table>
-</div>
-<p><a name="quilkin-filters-compress-v1alpha1-Compress-Action"></a></p>
-<h3 id="compressaction"><a class="header" href="#compressaction">Compress.Action</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Number</th><th>Description</th></tr></thead><tbody>
-<tr><td>DoNothing</td><td>0</td><td></td></tr>
-<tr><td>Compress</td><td>1</td><td></td></tr>
-<tr><td>Decompress</td><td>2</td><td></td></tr>
-</tbody></table>
-</div>
-<p><a name="quilkin-filters-compress-v1alpha1-Compress-Mode"></a></p>
-<h3 id="compressmode"><a class="header" href="#compressmode">Compress.Mode</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Number</th><th>Description</th></tr></thead><tbody>
-<tr><td>Snappy</td><td>0</td><td></td></tr>
-<tr><td>Lz4</td><td>1</td><td></td></tr>
-</tbody></table>
-</div>
 <p><a name="quilkin_filters_concatenate_v1alpha1_concatenate-proto"></a></p>
 <p align="right"><a href="services/xds/proto/index.html#top">Top</a></p>
 <h2 id="quilkinfiltersconcatenatev1alpha1concatenateproto"><a class="header" href="#quilkinfiltersconcatenatev1alpha1concatenateproto">quilkin/filters/concatenate/v1alpha1/concatenate.proto</a></h2>
@@ -3139,7 +3035,7 @@ Options:
   -m, --mds-port &lt;MDS_PORT&gt;
           Port for mDS service [env: QUILKIN_MDS_PORT=] [default: 7900]
   -x, --xds-port &lt;XDS_PORT&gt;
-          Port for xDS management_server service [env: QUILKIN_PORT=] [default: 7800]
+          Port for xDS management server service [env: QUILKIN_PORT=] [default: 7800]
       --idle-request-interval-secs &lt;IDLE_REQUEST_INTERVAL_SECS&gt;
           The interval in seconds at which the relay will send a discovery request to an management server after receiving no updates [env: QUILKIN_IDLE_REQUEST_INTERVAL_SECS=]
   -h, --help
@@ -3231,9 +3127,6 @@ Commands:
 Options:
   -q, --qcmp-port &lt;QCMP_PORT&gt;        Port for QCMP service [env: QCMP_PORT=] [default: 7600]
   -r, --relay &lt;RELAY&gt;                One or more `quilkin relay` endpoints to push configuration changes to [env: QUILKIN_MANAGEMENT_SERVER=]
-      --region &lt;REGION&gt;              The `region` to set in the cluster map for any provider endpoints discovered [env: QUILKIN_REGION=]
-      --zone &lt;ZONE&gt;                  The `zone` in the `region` to set in the cluster map for any provider endpoints discovered [env: QUILKIN_ZONE=]
-      --sub-zone &lt;SUB_ZONE&gt;          The `sub_zone` in the `zone` in the `region` to set in the cluster map for any provider endpoints discovered [env: QUILKIN_SUB_ZONE=]
       --address-type &lt;ADDRESS_TYPE&gt;  If specified, filters the available gameserver addresses to the one that matches the specified type
       --ip-kind &lt;IP_KIND&gt;            If specified, additionally filters the gameserver address by its ip kind [possible values: v4, v6, any]
   -i, --icao-code &lt;ICAO_CODE&gt;        The ICAO code for the agent [env: ICAO_CODE=] [default: XXXX]
@@ -3373,7 +3266,11 @@ until they are fully populated.</p>
 </li>
 <li>
 <p><code>quilkin_extant_allocation_count</code> (Gauge)</p>
-<p>The current number of extant allocations"</p>
+<p>The current number of extant allocations</p>
+</li>
+<li>
+<p><code>quilkin_shutdown_initiated</code></p>
+<p>Shutdown process has been started</p>
 </li>
 </ul>
 <h3 id="debugpprofprofile"><a class="header" href="#debugpprofprofile">/debug/pprof/profile</a></h3>

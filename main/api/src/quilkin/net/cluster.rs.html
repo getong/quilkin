@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/net/cluster.rs`."><title>cluster.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/net/cluster.rs`."><title>cluster.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0 (4d91de4e4 2025-02-17)" data-channel="1.85.0" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">quilkin/net/</div>cluster.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -754,7 +755,117 @@
 <a href="#754" id="754">754</a>
 <a href="#755" id="755">755</a>
 <a href="#756" id="756">756</a>
-</pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -802,19 +913,20 @@
     <span class="kw-2">&amp;</span>ACTIVE_CLUSTERS
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>active_endpoints() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>prometheus::IntGauge {
-    <span class="kw">static </span>ACTIVE_ENDPOINTS: Lazy&lt;prometheus::IntGauge&gt; = Lazy::new(|| {
-        <span class="kw">crate</span>::metrics::register(
-            prometheus::IntGauge::with_opts(<span class="kw">crate</span>::metrics::opts(
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>active_endpoints(cluster: <span class="kw-2">&amp;</span>str) -&gt; prometheus::IntGauge {
+    <span class="kw">static </span>ACTIVE_ENDPOINTS: Lazy&lt;prometheus::IntGaugeVec&gt; = Lazy::new(|| {
+        <span class="macro">prometheus::register_int_gauge_vec_with_registry!</span> {
+            <span class="macro">prometheus::opts!</span> {
                 <span class="string">"active_endpoints"</span>,
-                SUBSYSTEM,
-                <span class="string">"Number of currently active endpoints."</span>,
-            ))
-            .unwrap(),
-        )
+                <span class="string">"Number of currently available endpoints across clusters"</span>,
+            },
+            <span class="kw-2">&amp;</span>[<span class="string">"cluster"</span>],
+            <span class="kw">crate</span>::metrics::registry(),
+        }
+        .unwrap()
     });
 
-    <span class="kw-2">&amp;</span>ACTIVE_ENDPOINTS
+    ACTIVE_ENDPOINTS.with_label_values(<span class="kw-2">&amp;</span>[cluster])
 }
 
 <span class="kw">pub type </span>TokenAddressMap = gxhash::HashMap&lt;u64, gxhash::HashSet&lt;EndpointAddress&gt;&gt;;
@@ -994,12 +1106,15 @@
         <span class="kw">let </span><span class="kw-2">mut </span>hm = std::collections::HashMap::new();
 
         <span class="kw">for </span>(token, addrs) <span class="kw">in </span><span class="kw-2">&amp;</span>old_tm {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(naddrs) = <span class="self">self</span>.token_map.get(token) {
-                <span class="kw">if </span>addrs.symmetric_difference(naddrs).count() &gt; <span class="number">0 </span>{
-                    hm.insert(<span class="kw-2">*</span>token, <span class="prelude-val">Some</span>(naddrs.iter().cloned().collect()));
+            <span class="kw">match </span><span class="self">self</span>.token_map.get(token) {
+                <span class="prelude-val">Some</span>(naddrs) =&gt; {
+                    <span class="kw">if </span>addrs.symmetric_difference(naddrs).count() &gt; <span class="number">0 </span>{
+                        hm.insert(<span class="kw-2">*</span>token, <span class="prelude-val">Some</span>(naddrs.iter().cloned().collect()));
+                    }
                 }
-            } <span class="kw">else </span>{
-                hm.insert(<span class="kw-2">*</span>token, <span class="prelude-val">None</span>);
+                <span class="kw">_ </span>=&gt; {
+                    hm.insert(<span class="kw-2">*</span>token, <span class="prelude-val">None</span>);
+                }
             }
         }
 
@@ -1016,6 +1131,7 @@
 <span class="doccomment">/// Represents a full snapshot of all clusters.
 </span><span class="kw">pub struct </span>ClusterMap&lt;S = gxhash::GxBuildHasher&gt; {
     map: DashMap&lt;<span class="prelude-ty">Option</span>&lt;Locality&gt;, EndpointSet, S&gt;,
+    localities: DashMap&lt;<span class="prelude-ty">Option</span>&lt;Locality&gt;, <span class="prelude-ty">Option</span>&lt;std::net::IpAddr&gt;&gt;,
     token_map: DashMap&lt;u64, Vec&lt;EndpointAddress&gt;&gt;,
     num_endpoints: AtomicUsize,
     version: AtomicU64,
@@ -1055,11 +1171,31 @@
     }
 
     <span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>insert(<span class="kw-2">&amp;</span><span class="self">self</span>, locality: <span class="prelude-ty">Option</span>&lt;Locality&gt;, cluster: BTreeSet&lt;Endpoint&gt;) {
-        <span class="self">self</span>.apply(locality, EndpointSet::new(cluster))
+    </span><span class="kw">pub fn </span>insert(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        remote_addr: <span class="prelude-ty">Option</span>&lt;std::net::IpAddr&gt;,
+        locality: <span class="prelude-ty">Option</span>&lt;Locality&gt;,
+        cluster: BTreeSet&lt;Endpoint&gt;,
+    ) {
+        <span class="kw">let </span>_res = <span class="self">self</span>.apply(remote_addr, locality, EndpointSet::new(cluster));
     }
 
-    <span class="kw">pub fn </span>apply(<span class="kw-2">&amp;</span><span class="self">self</span>, locality: <span class="prelude-ty">Option</span>&lt;Locality&gt;, cluster: EndpointSet) {
+    <span class="kw">pub fn </span>apply(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        remote_addr: <span class="prelude-ty">Option</span>&lt;std::net::IpAddr&gt;,
+        locality: <span class="prelude-ty">Option</span>&lt;Locality&gt;,
+        cluster: EndpointSet,
+    ) -&gt; <span class="kw">crate</span>::Result&lt;()&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(raddr) = <span class="self">self</span>.localities.get(<span class="kw-2">&amp;</span>locality) {
+            <span class="kw">if </span><span class="kw-2">*</span>raddr != remote_addr {
+                <span class="macro">eyre::bail!</span>(
+                    <span class="string">"skipping cluster apply, '{locality:?}' is managed by '{raddr:?}', not '{remote_addr:?}'"
+                </span>);
+            }
+        }
+
+        <span class="self">self</span>.localities.insert(locality.clone(), remote_addr);
+
         <span class="kw">let </span>new_len = cluster.len();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>current) = <span class="self">self</span>.map.get_mut(<span class="kw-2">&amp;</span>locality) {
             <span class="kw">let </span>current = current.value_mut();
@@ -1091,6 +1227,8 @@
             <span class="self">self</span>.num_endpoints.fetch_add(new_len, Relaxed);
             <span class="self">self</span>.version.fetch_add(<span class="number">1</span>, Relaxed);
         }
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="attr">#[inline]
@@ -1103,25 +1241,25 @@
         <span class="self">self</span>.map.is_empty()
     }
 
-    <span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Locality&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;DashMapRef&gt; {
+    <span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Locality&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;DashMapRef&lt;<span class="lifetime">'_</span>&gt;&gt; {
         <span class="self">self</span>.map.get(key)
     }
 
-    <span class="kw">pub fn </span>get_mut(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Locality&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;DashMapRefMut&gt; {
+    <span class="kw">pub fn </span>get_mut(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Locality&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;DashMapRefMut&lt;<span class="lifetime">'_</span>&gt;&gt; {
         <span class="self">self</span>.map.get_mut(key)
     }
 
-    <span class="kw">pub fn </span>get_default(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;DashMapRef&gt; {
+    <span class="kw">pub fn </span>get_default(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;DashMapRef&lt;<span class="lifetime">'_</span>&gt;&gt; {
         <span class="self">self</span>.get(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>)
     }
 
-    <span class="kw">pub fn </span>get_default_mut(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;DashMapRefMut&gt; {
+    <span class="kw">pub fn </span>get_default_mut(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;DashMapRefMut&lt;<span class="lifetime">'_</span>&gt;&gt; {
         <span class="self">self</span>.get_mut(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>)
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">pub fn </span>insert_default(<span class="kw-2">&amp;</span><span class="self">self</span>, endpoints: BTreeSet&lt;Endpoint&gt;) {
-        <span class="self">self</span>.insert(<span class="prelude-val">None</span>, endpoints);
+        <span class="self">self</span>.insert(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, endpoints);
     }
 
     <span class="attr">#[inline]
@@ -1133,6 +1271,13 @@
                 set.update();
                 <span class="self">self</span>.num_endpoints.fetch_sub(<span class="number">1</span>, Relaxed);
                 <span class="self">self</span>.version.fetch_add(<span class="number">1</span>, Relaxed);
+
+                <span class="kw">if </span>set.is_empty() {
+                    <span class="kw">let </span>raddr = <span class="self">self</span>.localities.get(entry.key());
+                    <span class="kw">let </span>raddr = raddr.and_then(|r| <span class="kw-2">*</span>r);
+                    <span class="self">self</span>.remove_locality(raddr, entry.key());
+                }
+
                 <span class="kw">return </span><span class="bool-val">true</span>;
             }
         }
@@ -1156,6 +1301,12 @@
                     set.update();
                     <span class="self">self</span>.num_endpoints.fetch_sub(<span class="number">1</span>, Relaxed);
                     <span class="self">self</span>.version.fetch_add(<span class="number">1</span>, Relaxed);
+
+                    <span class="kw">if </span>set.is_empty() {
+                        <span class="kw">let </span>raddr = <span class="self">self</span>.localities.get(entry.key());
+                        <span class="kw">let </span>raddr = raddr.and_then(|r| <span class="kw-2">*</span>r);
+                        <span class="self">self</span>.remove_locality(raddr, entry.key());
+                    }
                 }
                 <span class="kw">return </span>removed;
             }
@@ -1165,19 +1316,31 @@
     </span>}
 
     <span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; dashmap::iter::Iter&lt;<span class="prelude-ty">Option</span>&lt;Locality&gt;, EndpointSet, S&gt; {
+    </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; dashmap::iter::Iter&lt;<span class="lifetime">'_</span>, <span class="prelude-ty">Option</span>&lt;Locality&gt;, EndpointSet, S&gt; {
         <span class="self">self</span>.map.iter()
     }
 
     <span class="kw">pub fn </span>entry(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         key: <span class="prelude-ty">Option</span>&lt;Locality&gt;,
-    ) -&gt; dashmap::mapref::entry::Entry&lt;<span class="prelude-ty">Option</span>&lt;Locality&gt;, EndpointSet&gt; {
+    ) -&gt; dashmap::mapref::entry::Entry&lt;<span class="lifetime">'_</span>, <span class="prelude-ty">Option</span>&lt;Locality&gt;, EndpointSet&gt; {
         <span class="self">self</span>.map.entry(key)
     }
 
     <span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>replace(<span class="kw-2">&amp;</span><span class="self">self</span>, locality: <span class="prelude-ty">Option</span>&lt;Locality&gt;, endpoint: Endpoint) -&gt; <span class="prelude-ty">Option</span>&lt;Endpoint&gt; {
+    </span><span class="kw">pub fn </span>replace(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        remote_addr: <span class="prelude-ty">Option</span>&lt;std::net::IpAddr&gt;,
+        locality: <span class="prelude-ty">Option</span>&lt;Locality&gt;,
+        endpoint: Endpoint,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;Endpoint&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(raddr) = <span class="self">self</span>.localities.get(<span class="kw-2">&amp;</span>locality) {
+            <span class="kw">if </span><span class="kw-2">*</span>raddr != remote_addr {
+                <span class="macro">tracing::trace!</span>(<span class="string">"not replacing locality endpoints"</span>);
+                <span class="kw">return </span><span class="prelude-val">None</span>;
+            }
+        }
+
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>set) = <span class="self">self</span>.map.get_mut(<span class="kw-2">&amp;</span>locality) {
             <span class="kw">let </span>replaced = set.endpoints.replace(endpoint);
             set.update();
@@ -1189,7 +1352,7 @@
 
             replaced
         } <span class="kw">else </span>{
-            <span class="self">self</span>.insert(locality, [endpoint].into());
+            <span class="self">self</span>.insert(remote_addr, locality, [endpoint].into());
             <span class="prelude-val">None
         </span>}
     }
@@ -1241,7 +1404,21 @@
     </span>}
 
     <span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>update_unlocated_endpoints(<span class="kw-2">&amp;</span><span class="self">self</span>, locality: Locality) {
+    </span><span class="kw">pub fn </span>update_unlocated_endpoints(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        remote_addr: <span class="prelude-ty">Option</span>&lt;std::net::IpAddr&gt;,
+        locality: Locality,
+    ) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(raddr) = <span class="self">self</span>.localities.get(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>) {
+            <span class="kw">if </span><span class="kw-2">*</span>raddr != remote_addr {
+                <span class="macro">tracing::trace!</span>(<span class="string">"not updating locality"</span>);
+                <span class="kw">return</span>;
+            }
+        }
+
+        <span class="self">self</span>.localities.remove(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
+        <span class="self">self</span>.localities.insert(<span class="prelude-val">Some</span>(locality.clone()), remote_addr);
+
         <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, set)) = <span class="self">self</span>.map.remove(<span class="kw-2">&amp;</span><span class="prelude-val">None</span>) {
             <span class="self">self</span>.version.fetch_add(<span class="number">1</span>, Relaxed);
             <span class="kw">if let </span><span class="prelude-val">Some</span>(replaced) = <span class="self">self</span>.map.insert(<span class="prelude-val">Some</span>(locality), set) {
@@ -1251,7 +1428,19 @@
     }
 
     <span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>remove_locality(<span class="kw-2">&amp;</span><span class="self">self</span>, locality: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Locality&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;EndpointSet&gt; {
+    </span><span class="kw">pub fn </span>remove_locality(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        remote_addr: <span class="prelude-ty">Option</span>&lt;std::net::IpAddr&gt;,
+        locality: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Locality&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;EndpointSet&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(raddr) = <span class="self">self</span>.localities.get(locality) {
+            <span class="kw">if </span><span class="kw-2">*</span>raddr != remote_addr {
+                <span class="macro">tracing::trace!</span>(<span class="string">"skipping locality removal"</span>);
+                <span class="kw">return </span><span class="prelude-val">None</span>;
+            }
+        }
+
+        <span class="self">self</span>.localities.remove(locality);
         <span class="kw">let </span>ret = <span class="self">self</span>.map.remove(locality).map(|(_k, v)| v);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ret) = <span class="kw-2">&amp;</span>ret {
             <span class="self">self</span>.version.fetch_add(<span class="number">1</span>, Relaxed);
@@ -1303,6 +1492,7 @@
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             map: &lt;DashMap&lt;<span class="prelude-ty">Option</span>&lt;Locality&gt;, EndpointSet, S&gt;&gt;::default(),
+            localities: Default::default(),
             token_map: Default::default(),
             version: &lt;<span class="kw">_</span>&gt;::default(),
             num_endpoints: &lt;<span class="kw">_</span>&gt;::default(),
@@ -1356,8 +1546,8 @@
     <span class="kw">fn </span>schema_name() -&gt; String {
         &lt;Vec&lt;EndpointWithLocality&gt;&gt;::schema_name()
     }
-    <span class="kw">fn </span>json_schema(gen: <span class="kw-2">&amp;mut </span>schemars::gen::SchemaGenerator) -&gt; schemars::schema::Schema {
-        &lt;Vec&lt;EndpointWithLocality&gt;&gt;::json_schema(gen)
+    <span class="kw">fn </span>json_schema(r#gen: <span class="kw-2">&amp;mut </span>schemars::r#gen::SchemaGenerator) -&gt; schemars::schema::Schema {
+        &lt;Vec&lt;EndpointWithLocality&gt;&gt;::json_schema(r#gen)
     }
 
     <span class="kw">fn </span>is_referenceable() -&gt; bool {
@@ -1396,7 +1586,17 @@
         </span>D: serde::Deserializer&lt;<span class="lifetime">'de</span>&gt;,
     {
         <span class="kw">let </span>cmd = ClusterMapDeser::deserialize(deserializer)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::from(cmd))
+        <span class="kw">let </span>map = cmd
+            .endpoints
+            .into_iter()
+            .map(
+                |EndpointWithLocality {
+                     locality,
+                     endpoints,
+                 }| { (locality, EndpointSet::new(endpoints)) },
+            )
+            .collect::&lt;DashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;();
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::from(map))
     }
 }
 
@@ -1415,22 +1615,6 @@
     }
 }
 
-<span class="kw">impl</span>&lt;S&gt; From&lt;ClusterMapDeser&gt; <span class="kw">for </span>ClusterMap&lt;S&gt;
-<span class="kw">where
-    </span>S: Default + std::hash::BuildHasher + Clone,
-{
-    <span class="kw">fn </span>from(cmd: ClusterMapDeser) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>map = DashMap::from_iter(cmd.endpoints.into_iter().map(
-            |EndpointWithLocality {
-                 locality,
-                 endpoints,
-             }| { (locality, EndpointSet::new(endpoints)) },
-        ));
-
-        <span class="self">Self</span>::from(map)
-    }
-}
-
 <span class="kw">impl</span>&lt;S&gt; From&lt;DashMap&lt;<span class="prelude-ty">Option</span>&lt;Locality&gt;, EndpointSet, S&gt;&gt; <span class="kw">for </span>ClusterMap&lt;S&gt;
 <span class="kw">where
     </span>S: Default + std::hash::BuildHasher + Clone,
@@ -1439,14 +1623,18 @@
         <span class="kw">let </span>num_endpoints = AtomicUsize::new(map.iter().map(|kv| kv.value().len()).sum());
 
         <span class="kw">let </span>token_map = DashMap::&lt;u64, Vec&lt;EndpointAddress&gt;&gt;::default();
+        <span class="kw">let </span>localities = DashMap::default();
         <span class="kw">for </span>es <span class="kw">in </span><span class="kw-2">&amp;</span>map {
             <span class="kw">for </span>(token_hash, addrs) <span class="kw">in </span><span class="kw-2">&amp;</span>es.value().token_map {
                 token_map.insert(<span class="kw-2">*</span>token_hash, addrs.iter().cloned().collect());
             }
+
+            localities.insert(es.key().clone(), <span class="prelude-val">None</span>);
         }
 
         <span class="self">Self </span>{
             map,
+            localities,
             token_map,
             num_endpoints,
             version: AtomicU64::new(<span class="number">1</span>),
@@ -1467,7 +1655,7 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use </span>std::net::Ipv4Addr;
+    <span class="kw">use </span>std::net::{Ipv4Addr, Ipv6Addr};
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
@@ -1479,35 +1667,69 @@
         <span class="kw">let </span><span class="kw-2">mut </span>endpoint = Endpoint::new((Ipv4Addr::LOCALHOST, <span class="number">7777</span>).into());
         <span class="kw">let </span>cluster1 = ClusterMap::new();
 
-        cluster1.insert(<span class="prelude-val">Some</span>(nl1.clone()), [endpoint.clone()].into());
-        cluster1.insert(<span class="prelude-val">Some</span>(de1.clone()), [endpoint.clone()].into());
+        cluster1.insert(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(nl1.clone()), [endpoint.clone()].into());
+        cluster1.insert(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(de1.clone()), [endpoint.clone()].into());
 
         <span class="macro">assert_eq!</span>(cluster1.get(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(nl1.clone())).unwrap().len(), <span class="number">1</span>);
-        <span class="macro">assert!</span>(cluster1
-            .get(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(nl1.clone()))
-            .unwrap()
-            .contains(<span class="kw-2">&amp;</span>endpoint));
+        <span class="macro">assert!</span>(
+            cluster1
+                .get(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(nl1.clone()))
+                .unwrap()
+                .contains(<span class="kw-2">&amp;</span>endpoint)
+        );
         <span class="macro">assert_eq!</span>(cluster1.get(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(de1.clone())).unwrap().len(), <span class="number">1</span>);
-        <span class="macro">assert!</span>(cluster1
-            .get(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(de1.clone()))
-            .unwrap()
-            .contains(<span class="kw-2">&amp;</span>endpoint));
+        <span class="macro">assert!</span>(
+            cluster1
+                .get(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(de1.clone()))
+                .unwrap()
+                .contains(<span class="kw-2">&amp;</span>endpoint)
+        );
 
         endpoint.address.port = <span class="number">8080</span>;
 
-        cluster1.insert(<span class="prelude-val">Some</span>(de1.clone()), [endpoint.clone()].into());
+        cluster1.insert(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(de1.clone()), [endpoint.clone()].into());
 
         <span class="macro">assert_eq!</span>(cluster1.get(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(nl1.clone())).unwrap().len(), <span class="number">1</span>);
         <span class="macro">assert_eq!</span>(cluster1.get(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(de1.clone())).unwrap().len(), <span class="number">1</span>);
-        <span class="macro">assert!</span>(cluster1
-            .get(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(de1.clone()))
-            .unwrap()
-            .contains(<span class="kw-2">&amp;</span>endpoint));
+        <span class="macro">assert!</span>(
+            cluster1
+                .get(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(de1.clone()))
+                .unwrap()
+                .contains(<span class="kw-2">&amp;</span>endpoint)
+        );
 
-        cluster1.insert(<span class="prelude-val">Some</span>(de1.clone()), &lt;<span class="kw">_</span>&gt;::default());
+        cluster1.insert(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(de1.clone()), &lt;<span class="kw">_</span>&gt;::default());
 
         <span class="macro">assert_eq!</span>(cluster1.get(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(nl1.clone())).unwrap().len(), <span class="number">1</span>);
         <span class="macro">assert!</span>(cluster1.get(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(de1.clone())).unwrap().is_empty());
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>reject_duplicate_localities() {
+        <span class="kw">let </span>nl1 = Locality::with_region(<span class="string">"nl-1"</span>);
+
+        <span class="kw">let </span>nl01 = Ipv4Addr::new(<span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>);
+        <span class="kw">let </span>nl02 = Ipv6Addr::new(<span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>);
+
+        <span class="kw">let </span>expected: std::collections::BTreeSet&lt;<span class="kw">_</span>&gt; = [
+            Endpoint::new((Ipv4Addr::new(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>), <span class="number">1234</span>).into()),
+            Endpoint::new((Ipv4Addr::new(<span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>), <span class="number">1234</span>).into()),
+        ]
+        .into();
+
+        <span class="kw">let </span>cluster = ClusterMap::new();
+        cluster.insert(<span class="prelude-val">Some</span>(nl01.into()), <span class="prelude-val">Some</span>(nl1.clone()), expected.clone());
+
+        <span class="kw">let </span>not_expected: std::collections::BTreeSet&lt;<span class="kw">_</span>&gt; =
+            [Endpoint::new((Ipv4Addr::new(<span class="number">20</span>, <span class="number">20</span>, <span class="number">20</span>, <span class="number">20</span>), <span class="number">1234</span>).into())].into();
+
+        cluster.insert(<span class="prelude-val">Some</span>(nl02.into()), <span class="prelude-val">Some</span>(nl1.clone()), not_expected.clone());
+        <span class="macro">assert_eq!</span>(cluster.get(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(nl1.clone())).unwrap().endpoints, expected);
+
+        cluster.remove_locality(<span class="prelude-val">Some</span>(nl01.into()), <span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(nl1.clone()));
+
+        cluster.insert(<span class="prelude-val">Some</span>(nl02.into()), <span class="prelude-val">Some</span>(nl1.clone()), not_expected.clone());
+        <span class="macro">assert_eq!</span>(cluster.get(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(nl1)).unwrap().endpoints, not_expected);
     }
 }
 </code></pre></div></section></main></body></html>

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/codec/qcmp.rs`."><title>qcmp.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/codec/qcmp.rs`."><title>qcmp.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0 (4d91de4e4 2025-02-17)" data-channel="1.85.0" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">quilkin/codec/</div>qcmp.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -704,7 +705,31 @@
 <a href="#704" id="704">704</a>
 <a href="#705" id="705">705</a>
 <a href="#706" id="706">706</a>
-</pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2023 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -723,9 +748,10 @@
 </span><span class="doccomment">//! Logic for parsing and generating Quilkin Control Message Protocol (QCMP) messages.
 
 </span><span class="kw">use crate</span>::{
+    metrics,
     net::{
-        phoenix::{DistanceMeasure, Measurement},
         DualStackEpollSocket,
+        phoenix::{DistanceMeasure, Measurement},
     },
     time::{DurationNanos, UtcTimestamp},
 };
@@ -898,8 +924,11 @@
     }
 }
 
-<span class="kw">pub fn </span>spawn(socket: socket2::Socket, <span class="kw-2">mut </span>shutdown_rx: <span class="kw">crate</span>::ShutdownRx) -&gt; <span class="kw">crate</span>::Result&lt;()&gt; {
-    <span class="kw">use </span>tracing::{instrument::WithSubscriber <span class="kw">as _</span>, Instrument <span class="kw">as _</span>};
+<span class="kw">pub fn </span>spawn(
+    socket: socket2::Socket,
+    <span class="kw-2">mut </span>shutdown_rx: <span class="kw">crate</span>::signal::ShutdownRx,
+) -&gt; <span class="kw">crate</span>::Result&lt;()&gt; {
+    <span class="kw">use </span>tracing::{Instrument <span class="kw">as _</span>, instrument::WithSubscriber <span class="kw">as _</span>};
 
     <span class="kw">let </span>port = <span class="kw">crate</span>::net::socket_port(<span class="kw-2">&amp;</span>socket);
 
@@ -908,23 +937,31 @@
             <span class="kw">let </span><span class="kw-2">mut </span>input_buf = [<span class="number">0u8</span>; MAX_QCMP_PACKET_LEN];
             <span class="kw">let </span>socket = DualStackEpollSocket::new(port).unwrap();
             <span class="kw">let </span><span class="kw-2">mut </span>output_buf = QcmpPacket::default();
+            metrics::qcmp::active(<span class="bool-val">true</span>);
 
             <span class="kw">loop </span>{
                 <span class="kw">let </span>result = <span class="macro">tokio::select!</span> {
                     result = socket.recv_from(<span class="kw-2">&amp;mut </span>input_buf) =&gt; result,
-                    <span class="kw">_ </span>= shutdown_rx.changed() =&gt; <span class="kw">return</span>,
+                    <span class="kw">_ </span>= shutdown_rx.changed() =&gt; {
+                        metrics::qcmp::active(<span class="bool-val">false</span>);
+                        <span class="kw">return
+                    </span>}
                 };
-                <span class="kw">match </span>result {
+
+                <span class="kw">match </span>track_error(result, <span class="kw-2">&amp;</span><span class="kw">crate</span>::metrics::AsnInfo::EMPTY) {
                     <span class="prelude-val">Ok</span>((size, source)) =&gt; {
                         <span class="kw">let </span>received_at = UtcTimestamp::now();
-                        <span class="kw">let </span>command = <span class="kw">match </span>Protocol::parse(<span class="kw-2">&amp;</span>input_buf[..size]) {
+                        <span class="kw">let </span>ip_entry = <span class="kw">crate</span>::net::maxmind_db::MaxmindDb::lookup(source.ip()).map(<span class="kw">crate</span>::net::maxmind_db::MetricsIpNetEntry::from);
+                        <span class="kw">let </span>asn_info = <span class="kw">crate</span>::metrics::AsnInfo::from(ip_entry.as_ref());
+                        <span class="kw">let </span>command = <span class="kw">match </span>track_error(Protocol::parse(<span class="kw-2">&amp;</span>input_buf[..size]), <span class="kw-2">&amp;</span>asn_info) {
                             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(command)) =&gt; command,
                             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
                                 <span class="macro">tracing::debug!</span>(<span class="string">"rejected non-qcmp packet"</span>);
+                                metrics::qcmp::packets_total_invalid(size, <span class="kw-2">&amp;</span>asn_info);
                                 <span class="kw">continue</span>;
                             }
                             <span class="prelude-val">Err</span>(error) =&gt; {
-                                <span class="macro">tracing::debug!</span>(%error, <span class="string">"rejected malformed packet"</span>);
+                                <span class="macro">tracing::debug!</span>(%error, %source, <span class="string">"rejected malformed packet"</span>);
                                 <span class="kw">continue</span>;
                             }
                         };
@@ -934,25 +971,29 @@
                             nonce,
                         } = command
                         <span class="kw">else </span>{
-                            <span class="macro">tracing::warn!</span>(<span class="string">"rejected unsupported QCMP packet"</span>);
+                            <span class="macro">tracing::warn!</span>(%source, <span class="string">"rejected unsupported QCMP packet"</span>);
+                            metrics::qcmp::packets_total_unsupported(size, <span class="kw-2">&amp;</span>asn_info);
                             <span class="kw">continue</span>;
                         };
 
+                        metrics::qcmp::packets_total_valid(size, <span class="kw-2">&amp;</span>asn_info);
+                        metrics::qcmp::ingress_latency(client_timestamp, received_at, <span class="kw-2">&amp;</span>asn_info);
                         Protocol::ping_reply(nonce, client_timestamp, received_at)
                             .encode(<span class="kw-2">&amp;mut </span>output_buf);
 
                         <span class="macro">tracing::debug!</span>(
+                            %source,
                             <span class="string">"sending QCMP pong"</span>,
                         );
 
-                        <span class="kw">match </span>socket.send_to(<span class="kw-2">&amp;</span>output_buf, source).<span class="kw">await </span>{
+                        <span class="kw">match </span>track_error(socket.send_to(<span class="kw-2">&amp;</span>output_buf, source).<span class="kw">await</span>, <span class="kw-2">&amp;</span>asn_info) {
                             <span class="prelude-val">Ok</span>(len) =&gt; {
                                 <span class="kw">if </span>len != output_buf.len() {
-                                    <span class="macro">tracing::error!</span>(<span class="string">"failed to send entire QCMP pong response, expected {} but only sent {len}"</span>, output_buf.len());
+                                    <span class="macro">tracing::error!</span>(%source, <span class="string">"failed to send entire QCMP pong response, expected {} but only sent {len}"</span>, output_buf.len());
                                 }
                             }
                             <span class="prelude-val">Err</span>(error) =&gt; {
-                                <span class="macro">tracing::warn!</span>(%error, <span class="string">"error responding to ping"</span>);
+                                <span class="macro">tracing::warn!</span>(%error, %source, <span class="string">"error responding to ping"</span>);
                             }
                         }
                     }
@@ -967,6 +1008,16 @@
     );
 
     <span class="prelude-val">Ok</span>(())
+}
+
+<span class="kw">fn </span>track_error&lt;T, E: std::fmt::Display&gt;(
+    result: <span class="prelude-ty">Result</span>&lt;T, E&gt;,
+    asn_info: <span class="kw-2">&amp;</span><span class="kw">crate</span>::metrics::AsnInfo&lt;<span class="lifetime">'_</span>&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;T, E&gt; {
+    result.inspect_err(|error| {
+        <span class="kw">let </span>reason = error.to_string();
+        metrics::qcmp::errors_total(<span class="kw-2">&amp;</span>reason, asn_info).inc();
+    })
 }
 
 <span class="doccomment">/// The set of possible QCMP commands.
@@ -1055,8 +1106,7 @@
     <span class="doccomment">/// Returns the packet's nonce.
     </span><span class="kw">pub fn </span>nonce(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u8 {
         <span class="kw">match </span><span class="self">self </span>{
-            Protocol::Ping { nonce, .. } =&gt; <span class="kw-2">*</span>nonce,
-            Protocol::PingReply { nonce, .. } =&gt; <span class="kw-2">*</span>nonce,
+            Protocol::Ping { nonce, .. } | Protocol::PingReply { nonce, .. } =&gt; <span class="kw-2">*</span>nonce,
         }
     }
 
@@ -1381,7 +1431,7 @@
         <span class="kw">let </span>socket = raw_socket_with_reuse(<span class="number">0</span>).unwrap();
         <span class="kw">let </span>addr = socket.local_addr().unwrap().as_socket().unwrap();
 
-        <span class="kw">let </span>(_tx, rx) = <span class="kw">crate</span>::make_shutdown_channel(Default::default());
+        <span class="kw">let </span>(_tx, rx) = <span class="kw">crate</span>::signal::channel(Default::default());
         spawn(socket, rx).unwrap();
 
         <span class="kw">let </span>delay = Duration::from_millis(<span class="number">50</span>);

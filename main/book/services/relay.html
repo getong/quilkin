@@ -24,9 +24,9 @@
         <link rel="stylesheet" href="../fonts/fonts.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="../highlight.css">
-        <link rel="stylesheet" href="../tomorrow-night.css">
-        <link rel="stylesheet" href="../ayu-highlight.css">
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
 
@@ -186,7 +186,7 @@ Options:
   -m, --mds-port &lt;MDS_PORT&gt;
           Port for mDS service [env: QUILKIN_MDS_PORT=] [default: 7900]
   -x, --xds-port &lt;XDS_PORT&gt;
-          Port for xDS management_server service [env: QUILKIN_PORT=] [default: 7800]
+          Port for xDS management server service [env: QUILKIN_PORT=] [default: 7800]
       --idle-request-interval-secs &lt;IDLE_REQUEST_INTERVAL_SECS&gt;
           The interval in seconds at which the relay will send a discovery request to an management server after receiving no updates [env: QUILKIN_IDLE_REQUEST_INTERVAL_SECS=]
   -h, --help

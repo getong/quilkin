@@ -24,9 +24,9 @@
         <link rel="stylesheet" href="../../fonts/fonts.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="../../highlight.css">
-        <link rel="stylesheet" href="../../tomorrow-night.css">
-        <link rel="stylesheet" href="../../ayu-highlight.css">
+        <link rel="stylesheet" id="highlight-css" href="../../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
 
@@ -244,6 +244,41 @@ more accurately represent the location of any datacentre.</p>
 request to the QCMP port.</p>
 <p>The returned data is a JSON object with each key being the ICAO code for the
 datacentre, and the value being the latency in nanoseconds.</p>
+<h2 id="metrics"><a class="header" href="#metrics">Metrics</a></h2>
+<ul>
+<li>
+<p><code>quilkin_phoenix_requests</code></p>
+<p>The amount of phoenix (latency) requests</p>
+</li>
+<li>
+<p><code>quilkin_phoenix_task_closed</code></p>
+<p>Whether the phoenix latency measurement task has shutdown</p>
+</li>
+<li>
+<p><code>quilkin_phoenix_server_errors</code></p>
+<p>The amount of errors attempting to spawn the phoenix HTTP server</p>
+</li>
+<li>
+<p><code>quilkin_service_qcmp_active</code></p>
+<p>Whether the QCMP service is currently running, either 1 for running or 0 for not.</p>
+</li>
+<li>
+<p><code>quilkin_service_qcmp_bytes_total{kind, asn, ip_prefix}</code></p>
+<p>Total number of bytes processed through QCMP. <code>kind</code> is either <code>valid</code>, <code>invalid</code>, or <code>unsupported</code>.</p>
+</li>
+<li>
+<p><code>quilkin_service_qcmp_errors_total{asn, ip_prefix}</code></p>
+<p>Total number of errors QCMP has encountered.</p>
+</li>
+<li>
+<p><code>quilkin_service_qcmp_packets_total{kind, asn, ip_prefix}</code></p>
+<p>Total number of packets processed through QCMP. <code>kind</code> is either <code>valid</code>, <code>invalid</code>, or <code>unsupported</code>.</p>
+</li>
+<li>
+<p><code>quilkin_service_qcmp_ingress_latency_seconds{asn, ip_prefix}</code></p>
+<p>The time from when the client created the packet, to when QCMP received it.</p>
+</li>
+</ul>
 
                     </main>
 

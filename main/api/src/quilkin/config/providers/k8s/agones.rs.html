@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/config/providers/k8s/agones.rs`."><title>agones.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/config/providers/k8s/agones.rs`."><title>agones.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0 (4d91de4e4 2025-02-17)" data-channel="1.85.0" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">quilkin/config/providers/k8s/</div>agones.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -876,11 +877,7 @@
 <a href="#876" id="876">876</a>
 <a href="#877" id="877">877</a>
 <a href="#878" id="878">878</a>
-<a href="#879" id="879">879</a>
-<a href="#880" id="880">880</a>
-<a href="#881" id="881">881</a>
-<a href="#882" id="882">882</a>
-</pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#879" id="879">879</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2022 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -912,7 +909,7 @@
 
 <span class="kw">const </span>QUILKIN_TOKEN_LABEL: <span class="kw-2">&amp;</span>str = <span class="string">"quilkin.dev/tokens"</span>;
 
-<span class="doccomment">/// Auto-generated derived type for GameServerSpec via `CustomResource`
+<span class="doccomment">/// Auto-generated derived type for [`GameServerSpec`] via `CustomResource`
 </span><span class="attr">#[derive(Clone, Debug, JsonSchema)]
 #[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>GameServer {
@@ -1037,7 +1034,7 @@
     }
 
     <span class="kw">pub fn </span>is_allocated(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.status.as_ref().map_or(<span class="bool-val">false</span>, |status| {
+        <span class="self">self</span>.status.as_ref().is_some_and(|status| {
             <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>status.addresses, <span class="question-mark">?</span>status.state, <span class="string">"checking gameserver"</span>);
             <span class="macro">matches!</span>(status.state, GameServerState::Allocated)
         })
@@ -1093,7 +1090,7 @@
 <span class="kw">impl </span>kube::core::crd::v1::CustomResourceExt <span class="kw">for </span>GameServer {
     <span class="kw">fn </span>crd() -&gt; CustomResourceDefinition {
         <span class="kw">let </span>open_api_v3_schema = <span class="prelude-val">Some</span>(
-            schemars::gen::SchemaSettings::openapi3()
+            schemars::r#gen::SchemaSettings::openapi3()
                 .with(|s| {
                     s.inline_subschemas = <span class="bool-val">true</span>;
                     s.meta_schema = <span class="prelude-val">None</span>;
@@ -1249,11 +1246,12 @@
 </span><span class="kw">pub struct </span>GameServerPort {
     <span class="doccomment">/// Name is the descriptive name of the port
     </span><span class="kw">pub </span>name: String,
-    <span class="doccomment">/// PortPolicy defines the policy for how the HostPort is populated.
-    /// Dynamic port will allocate a HostPort within the selected MIN_PORT and MAX_PORT range passed to the controller
-    /// at installation time.
-    /// When `Static` portPolicy is specified, `HostPort` is required, to specify the port that game clients will
-    /// connect to
+    <span class="doccomment">/// Defines the policy for how the [`Self::host_port`] is populated.
+    ///
+    /// - Dynamic port will allocate a `HostPort` within the selected `MIN_PORT`
+    ///   and `MAX_PORT` range passed to the controller at installation time.
+    /// - When `Static` portPolicy is specified, `HostPort` is required, to
+    ///   specify the port that game clients will connect to
     </span><span class="attr">#[serde(default)]
     </span><span class="kw">pub </span>port_policy: PortPolicy,
     <span class="doccomment">/// The name of the container on which to open the port. Defaults to the
@@ -1287,33 +1285,33 @@
 
 <span class="attr">#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
 </span><span class="kw">pub enum </span>GameServerState {
-    <span class="doccomment">/// A dynamically allocating GameServer is being created, an open port needs
+    <span class="doccomment">/// A dynamically allocating [`GameServer`] is being created, an open port needs
     /// to be allocated
     </span>PortAllocation,
-    <span class="doccomment">/// The Pod for the GameServer is being created.
+    <span class="doccomment">/// The Pod for the [`GameServer`] is being created.
     </span>Creating,
-    <span class="doccomment">/// The Pods for the GameServer are being created but are not yet Scheduled
+    <span class="doccomment">/// The Pods for the [`GameServer`] are being created but are not yet Scheduled
     </span>Starting,
     <span class="doccomment">/// We have determined that the Pod has been scheduled in the cluster --
-    /// basically, we have a NodeName
+    /// basically, we have a `NodeName`
     </span>Scheduled,
-    <span class="doccomment">/// The GameServer has declared that it is ready
+    <span class="doccomment">/// The [`GameServer`] has declared that it is ready
     </span>RequestReady,
-    <span class="doccomment">/// The GameServer is ready to take connections from game clients.
+    <span class="doccomment">/// The [`GameServer`] is ready to take connections from game clients.
     </span>Ready,
-    <span class="doccomment">/// The GameServer has shutdown and everything needs to be deleted from the cluster
+    <span class="doccomment">/// The [`GameServer`] has shutdown and everything needs to be deleted from the cluster
     </span>Shutdown,
-    <span class="doccomment">/// Something has gone wrong with the Gameserver and it cannot be resolved
+    <span class="doccomment">/// Something has gone wrong with the [`GameServer`] and it cannot be resolved
     </span>Error,
-    <span class="doccomment">/// The GameServer has failed its health checks
+    <span class="doccomment">/// The [`GameServer`] has failed its health checks
     </span>Unhealthy,
-    <span class="doccomment">/// The GameServer is reserved and therefore can be allocated but not removed
+    <span class="doccomment">/// The [`GameServer`] is reserved and therefore can be allocated but not removed
     </span>Reserved,
-    <span class="doccomment">/// The GameServer has been allocated to a session
+    <span class="doccomment">/// The [`GameServer`] has been allocated to a session
     </span>Allocated,
 }
 
-<span class="doccomment">/// The port that was allocated to a GameServer.
+<span class="doccomment">/// The port that was allocated to a [`GameServer`].
 </span><span class="attr">#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
 </span><span class="kw">pub struct </span>GameServerStatusPort {
     <span class="kw">pub </span>name: String,
@@ -1324,13 +1322,13 @@
 </span><span class="attr">#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>SdkServer {
-    <span class="doccomment">/// LogLevel for SDK server (sidecar) logs. Defaults to "Info"
+    <span class="doccomment">/// The log level for SDK server (sidecar) logs. Defaults to [`SdkServerLogLevel::Info`]
     </span><span class="attr">#[serde(default)]
     </span><span class="kw">pub </span>log_level: SdkServerLogLevel,
-    <span class="doccomment">/// GRPCPort is the port on which the SDK Server binds the gRPC server to accept incoming connections
+    <span class="doccomment">/// The port on which the SDK Server binds the gRPC server to accept incoming connections
     </span><span class="attr">#[serde(default = <span class="string">"default_sdk_grpc_port"</span>)]
     </span><span class="kw">pub </span>grpc_port: u16,
-    <span class="doccomment">/// HTTPPort is the port on which the SDK Server binds the HTTP gRPC gateway server to accept incoming connections
+    <span class="doccomment">/// The port on which the SDK Server binds the HTTP gRPC gateway server to accept incoming connections
     </span><span class="attr">#[serde(default = <span class="string">"default_sdk_http_port"</span>)]
     </span><span class="kw">pub </span>http_port: u16,
 }
@@ -1387,18 +1385,18 @@
     }
 }
 
-<span class="doccomment">/// the strategy that a Fleet &amp; GameServers will use when scheduling
-/// GameServers' Pods across a cluster. In future versions, this will also
+<span class="doccomment">/// The strategy that a [`Fleet`] &amp; [`GameServer`]s will use when scheduling
+/// [`GameServer`]s' Pods across a cluster. In future versions, this will also
 /// impact Fleet scale down, and Pod Scheduling.
 </span><span class="attr">#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
 </span><span class="kw">pub enum </span>SchedulingStrategy {
-    <span class="doccomment">/// Prioritise allocating GameServers on Nodes with the most Allocated, and
-    /// then Ready GameServers to bin pack as many Allocated GameServers on a
+    <span class="doccomment">/// Prioritise allocating [`GameServer`]s on Nodes with the most Allocated, and
+    /// then Ready [`GameServer`]s to bin pack as many Allocated [`GameServer`]s on a
     /// single node.  This is most useful for dynamic Kubernetes clusters - such
     /// as on Cloud Providers.
     </span>Packed,
-    <span class="doccomment">/// prioritise allocating GameServers on Nodes with the least Allocated, and
-    /// then Ready GameServers to distribute Allocated GameServers across many
+    <span class="doccomment">/// Prioritise allocating [`GameServer`]s on Nodes with the least Allocated, and
+    /// then Ready [`GameServer`]s to distribute Allocated [`GameServer`]s across many
     /// nodes. This is most useful for statically sized Kubernetes clusters -
     /// such as on physical hardware.
     </span>Distributed,
@@ -1528,18 +1526,17 @@
             <span class="kw">if </span>scale.is_some() {
                 ::serde_json::Value::Object({
                     <span class="kw">let </span><span class="kw-2">mut </span>object = ::serde_json::Map::new();
-                    <span class="kw">let _ </span>= object.insert(
+                    object.insert(
                         (<span class="string">"status"</span>).into(),
                         ::serde_json::Value::Object(::serde_json::Map::new()),
                     );
-                    <span class="kw">let _ </span>=
-                        object.insert((<span class="string">"scale"</span>).into(), ::serde_json::to_value(<span class="kw-2">&amp;</span>scale).unwrap());
+                    object.insert((<span class="string">"scale"</span>).into(), ::serde_json::to_value(<span class="kw-2">&amp;</span>scale).unwrap());
                     object
                 })
             } <span class="kw">else </span>{
                 ::serde_json::Value::Object({
                     <span class="kw">let </span><span class="kw-2">mut </span>object = ::serde_json::Map::new();
-                    <span class="kw">let _ </span>= object.insert(
+                    object.insert(
                         (<span class="string">"status"</span>).into(),
                         ::serde_json::Value::Object(::serde_json::Map::new()),
                     );
@@ -1549,91 +1546,89 @@
         } <span class="kw">else </span>{
             ::serde_json::Value::Object(::serde_json::Map::new())
         };
-        <span class="kw">let </span>gen = ::schemars::gen::SchemaSettings::openapi3()
+        <span class="kw">let </span>r#gen = ::schemars::r#gen::SchemaSettings::openapi3()
             .with(|s| {
                 s.inline_subschemas = <span class="bool-val">true</span>;
                 s.meta_schema = <span class="prelude-val">None</span>;
             })
             .with_visitor(kube_core::schema::StructuralSchemaRewriter)
             .into_generator();
-        <span class="kw">let </span>schema = gen.into_root_schema_for::&lt;<span class="self">Self</span>&gt;();
+        <span class="kw">let </span>schema = r#gen.into_root_schema_for::&lt;<span class="self">Self</span>&gt;();
         <span class="kw">let </span>jsondata = ::serde_json::Value::Object({
             <span class="kw">let </span><span class="kw-2">mut </span>object = ::serde_json::Map::new();
-            <span class="kw">let _ </span>= object.insert(
+            object.insert(
                 (<span class="string">"metadata"</span>).into(),
                 ::serde_json::Value::Object({
                     <span class="kw">let </span><span class="kw-2">mut </span>object = ::serde_json::Map::new();
-                    <span class="kw">let _ </span>= object.insert(
+                    object.insert(
                         (<span class="string">"name"</span>).into(),
                         ::serde_json::to_value(<span class="string">"fleets.agones.dev"</span>).unwrap(),
                     );
                     object
                 }),
             );
-            <span class="kw">let _ </span>= object.insert(
+            object.insert(
                 (<span class="string">"spec"</span>).into(),
                 ::serde_json::Value::Object({
                     <span class="kw">let </span><span class="kw-2">mut </span>object = ::serde_json::Map::new();
-                    <span class="kw">let _ </span>= object.insert(
+                    object.insert(
                         (<span class="string">"group"</span>).into(),
                         ::serde_json::to_value(<span class="string">"agones.dev"</span>).unwrap(),
                     );
-                    <span class="kw">let _ </span>= object.insert(
+                    object.insert(
                         (<span class="string">"scope"</span>).into(),
                         ::serde_json::to_value(<span class="string">"Namespaced"</span>).unwrap(),
                     );
-                    <span class="kw">let _ </span>= object.insert(
+                    object.insert(
                         (<span class="string">"names"</span>).into(),
                         ::serde_json::Value::Object({
                             <span class="kw">let </span><span class="kw-2">mut </span>object = ::serde_json::Map::new();
-                            <span class="kw">let _ </span>= object.insert(
+                            object.insert(
                                 (<span class="string">"categories"</span>).into(),
                                 ::serde_json::to_value(categories).unwrap(),
                             );
-                            <span class="kw">let _ </span>= object.insert(
+                            object.insert(
                                 (<span class="string">"plural"</span>).into(),
                                 ::serde_json::to_value(<span class="string">"fleets"</span>).unwrap(),
                             );
-                            <span class="kw">let _ </span>= object.insert(
+                            object.insert(
                                 (<span class="string">"singular"</span>).into(),
                                 ::serde_json::to_value(<span class="string">"fleet"</span>).unwrap(),
                             );
-                            <span class="kw">let _ </span>= object
+                            object
                                 .insert((<span class="string">"kind"</span>).into(), ::serde_json::to_value(<span class="string">"Fleet"</span>).unwrap());
-                            <span class="kw">let _ </span>= object.insert(
+                            object.insert(
                                 (<span class="string">"shortNames"</span>).into(),
                                 ::serde_json::to_value(shorts).unwrap(),
                             );
                             object
                         }),
                     );
-                    <span class="kw">let _ </span>= object.insert(
+                    object.insert(
                         (<span class="string">"versions"</span>).into(),
                         ::serde_json::Value::Array(&lt;[<span class="kw">_</span>]&gt;::into_vec(Box::new([
                             ::serde_json::Value::Object({
                                 <span class="kw">let </span><span class="kw-2">mut </span>object = ::serde_json::Map::new();
-                                <span class="kw">let _ </span>= object
+                                object
                                     .insert((<span class="string">"name"</span>).into(), ::serde_json::to_value(<span class="string">"v1"</span>).unwrap());
-                                <span class="kw">let _ </span>= object
-                                    .insert((<span class="string">"served"</span>).into(), ::serde_json::Value::Bool(<span class="bool-val">true</span>));
-                                <span class="kw">let _ </span>= object
-                                    .insert((<span class="string">"storage"</span>).into(), ::serde_json::Value::Bool(<span class="bool-val">true</span>));
-                                <span class="kw">let _ </span>= object.insert(
+                                object.insert((<span class="string">"served"</span>).into(), ::serde_json::Value::Bool(<span class="bool-val">true</span>));
+                                object.insert((<span class="string">"storage"</span>).into(), ::serde_json::Value::Bool(<span class="bool-val">true</span>));
+                                object.insert(
                                     (<span class="string">"schema"</span>).into(),
                                     ::serde_json::Value::Object({
                                         <span class="kw">let </span><span class="kw-2">mut </span>object = ::serde_json::Map::new();
-                                        <span class="kw">let _ </span>= object.insert(
+                                        object.insert(
                                             (<span class="string">"openAPIV3Schema"</span>).into(),
                                             ::serde_json::to_value(<span class="kw-2">&amp;</span>schema).unwrap(),
                                         );
                                         object
                                     }),
                                 );
-                                <span class="kw">let _ </span>= object.insert(
+                                object.insert(
                                     (<span class="string">"additionalPrinterColumns"</span>).into(),
                                     ::serde_json::to_value(columns).unwrap(),
                                 );
-                                <span class="kw">let _ </span>= object.insert(
+                                object.insert(
                                     (<span class="string">"subresources"</span>).into(),
                                     ::serde_json::to_value(subres).unwrap(),
                                 );
@@ -1679,7 +1674,7 @@
     }
 }
 
-<span class="doccomment">/// FleetSpec is the spec for a Fleet. More info: &lt;https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.Fleet&gt;
+<span class="doccomment">/// The spec for a [`Fleet`]. More info: &lt;https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.Fleet&gt;
 </span><span class="attr">#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema, Default)]
 </span><span class="kw">pub struct </span>FleetSpec {
     <span class="attr">#[serde(default, skip_serializing_if = <span class="string">"Option::is_none"</span>)]
@@ -1688,12 +1683,11 @@
     </span><span class="kw">pub </span>scheduling: <span class="prelude-ty">Option</span>&lt;FleetScheduling&gt;,
     <span class="attr">#[serde(default, skip_serializing_if = <span class="string">"Option::is_none"</span>)]
     </span><span class="kw">pub </span>strategy: <span class="prelude-ty">Option</span>&lt;FleetStrategy&gt;,
-    <span class="doccomment">/// GameServer is the data structure for a GameServer resource.
+    <span class="doccomment">/// Template for a [`GameServer`] resource.
     </span><span class="kw">pub </span>template: GameServerTemplateSpec,
 }
 
-<span class="doccomment">/// FleetSpec is the spec for a Fleet. More info: &lt;https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.Fleet&gt;
-</span><span class="attr">#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
+<span class="attr">#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 </span><span class="kw">pub enum </span>FleetScheduling {
     Packed,
     Distributed,
@@ -1729,16 +1723,16 @@
     RollingUpdate,
 }
 
-<span class="doccomment">/// GameServer is the data structure for a GameServer resource.
+<span class="doccomment">/// Spec for a [`GameServer`] resource.
 </span><span class="attr">#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema, Default)]
 </span><span class="kw">pub struct </span>GameServerTemplateSpec {
     <span class="attr">#[serde(default, skip_serializing_if = <span class="string">"Option::is_none"</span>)]
     </span><span class="kw">pub </span>metadata: <span class="prelude-ty">Option</span>&lt;ObjectMeta&gt;,
-    <span class="doccomment">/// GameServerSpec is the spec for a GameServer resource. More info: &lt;https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServer&gt;
+    <span class="doccomment">/// The spec for a [`GameServer`] resource. More info: &lt;https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServer&gt;
     </span><span class="kw">pub </span>spec: GameServerSpec,
 }
 
-<span class="doccomment">/// FleetStatus is the status of a Fleet. More info: &lt;https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.Fleet&gt;
+<span class="doccomment">/// The status of a Fleet. More info: &lt;https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.Fleet&gt;
 </span><span class="attr">#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 </span><span class="kw">pub struct </span>FleetStatus {
     <span class="attr">#[serde(

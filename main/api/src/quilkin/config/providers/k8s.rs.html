@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/config/providers/k8s.rs`."><title>k8s.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/config/providers/k8s.rs`."><title>k8s.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0 (4d91de4e4 2025-02-17)" data-channel="1.85.0" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">quilkin/config/providers/</div>k8s.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -220,7 +221,66 @@
 <a href="#220" id="220">220</a>
 <a href="#221" id="221">221</a>
 <a href="#222" id="222">222</a>
-</pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2024 Google LLC All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -243,15 +303,61 @@
 <span class="kw">use </span>futures::Stream;
 <span class="kw">use </span>k8s_openapi::api::core::v1::ConfigMap;
 <span class="kw">use </span>kube::{core::DeserializeGuard, runtime::watcher::Event};
+<span class="kw">use </span>kube_leader_election::{LeaseLock, LeaseLockParams};
 
 <span class="kw">use </span>agones::GameServer;
 
-<span class="kw">use </span><span class="kw">crate</span>::net::endpoint::Locality;
+<span class="kw">use crate</span>::{
+    config, metrics,
+    net::{ClusterMap, endpoint::Locality},
+};
 
+<span class="kw">const </span>CONFIGMAP: <span class="kw-2">&amp;</span>str = <span class="string">"v1/ConfigMap"</span>;
+<span class="kw">const </span>GAMESERVER: <span class="kw-2">&amp;</span>str = <span class="string">"agones.dev/v1/GameServer"</span>;
+
+<span class="kw">fn </span>track_event&lt;T&gt;(kind: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, event: Event&lt;T&gt;) -&gt; Event&lt;T&gt; {
+    <span class="kw">let </span>ty = <span class="kw">match </span><span class="kw-2">&amp;</span>event {
+        Event::Apply(<span class="kw">_</span>) =&gt; <span class="string">"apply"</span>,
+        Event::Init =&gt; <span class="string">"init"</span>,
+        Event::InitApply(<span class="kw">_</span>) =&gt; <span class="string">"init-apply"</span>,
+        Event::InitDone =&gt; <span class="string">"init-done"</span>,
+        Event::Delete(<span class="kw">_</span>) =&gt; <span class="string">"done"</span>,
+    };
+
+    metrics::k8s::events_total(kind, ty).inc();
+    event
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>update_leader_lock(
+    client: kube::Client,
+    namespace: <span class="kw">impl </span>AsRef&lt;str&gt;,
+    holder_id: <span class="kw">impl </span>Into&lt;String&gt;,
+    leader_lock: config::LeaderLock,
+) -&gt; <span class="kw">crate</span>::Result&lt;()&gt; {
+    <span class="kw">const </span>LEASE_NAME: <span class="kw-2">&amp;</span>str = <span class="string">"quilkin-mds-leader-lease"</span>;
+    <span class="kw">let </span>leadership = LeaseLock::new(
+        client,
+        namespace.as_ref(),
+        LeaseLockParams {
+            holder_id: holder_id.into(),
+            lease_name: LEASE_NAME.into(),
+            lease_ttl: std::time::Duration::from_millis(<span class="number">750</span>),
+        },
+    );
+
+    <span class="kw">loop </span>{
+        <span class="kw">match </span>leadership.try_acquire_or_renew().<span class="kw">await </span>{
+            <span class="prelude-val">Ok</span>(ll) =&gt; leader_lock.store(ll.acquired_lease),
+            <span class="prelude-val">Err</span>(error) =&gt; <span class="macro">tracing::warn!</span>(%error),
+        }
+
+        tokio::time::sleep(std::time::Duration::from_millis(<span class="number">500</span>)).<span class="kw">await</span>;
+    }
+}
 <span class="kw">pub fn </span>update_filters_from_configmap(
     client: kube::Client,
     namespace: <span class="kw">impl </span>AsRef&lt;str&gt;,
-    config: Arc&lt;<span class="kw">crate</span>::Config&gt;,
+    filters: config::Slot&lt;<span class="kw">crate</span>::filters::FilterChain&gt;,
 ) -&gt; <span class="kw">impl </span>Stream&lt;Item = <span class="kw">crate</span>::Result&lt;(), eyre::Error&gt;&gt; {
     <span class="macro">async_stream::stream!</span> {
         <span class="kw">let </span><span class="kw-2">mut </span>cmap = <span class="prelude-val">None</span>;
@@ -261,12 +367,13 @@
             <span class="kw">let </span>event = <span class="kw">match </span>event {
                 <span class="prelude-val">Ok</span>(event) =&gt; event,
                 <span class="prelude-val">Err</span>(error) =&gt; {
+                    metrics::k8s::errors_total(CONFIGMAP, <span class="kw-2">&amp;</span>error).inc();
                     <span class="kw">yield </span><span class="prelude-val">Err</span>(error.into());
                     <span class="kw">continue</span>;
                 }
             };
 
-            <span class="kw">let </span>configmap = <span class="kw">match </span>event {
+            <span class="kw">let </span>configmap = <span class="kw">match </span>track_event(CONFIGMAP, event) {
                 Event::Apply(configmap) =&gt; configmap,
                 Event::Init =&gt; { <span class="kw">yield </span><span class="prelude-val">Ok</span>(()); <span class="kw">continue</span>; }
                 Event::InitApply(configmap) =&gt; {
@@ -285,7 +392,8 @@
                     }
                 }
                 Event::Delete(<span class="kw">_</span>) =&gt; {
-                    config.filters.remove();
+                    metrics::k8s::filters(<span class="bool-val">false</span>);
+                    filters.remove();
                     <span class="kw">yield </span><span class="prelude-val">Ok</span>(());
                     <span class="kw">continue</span>;
                 }
@@ -295,13 +403,14 @@
             <span class="kw">let </span>data = data.get(<span class="string">"quilkin.yaml"</span>).ok_or_else(|| <span class="macro">eyre::eyre!</span>(<span class="string">"quilkin.yaml property not found"</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span>data: serde_json::Map&lt;String, serde_json::Value&gt; = serde_yaml::from_str(data)<span class="question-mark">?</span>;
 
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(filters) = data
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(de_filters) = data
                 .get(<span class="string">"filters"</span>)
                     .cloned()
                     .map(serde_json::from_value)
                     .transpose()<span class="question-mark">?
             </span>{
-                config.filters.store(Arc::new(filters));
+                metrics::k8s::filters(<span class="bool-val">true</span>);
+                filters.store(Arc::new(de_filters));
             }
 
             <span class="kw">yield </span><span class="prelude-val">Ok</span>(());
@@ -349,7 +458,7 @@
 <span class="kw">pub fn </span>update_endpoints_from_gameservers(
     client: kube::Client,
     namespace: <span class="kw">impl </span>AsRef&lt;str&gt;,
-    config: Arc&lt;<span class="kw">crate</span>::Config&gt;,
+    clusters: config::Watch&lt;ClusterMap&gt;,
     locality: <span class="prelude-ty">Option</span>&lt;Locality&gt;,
     address_selector: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::config::AddressSelector&gt;,
 ) -&gt; <span class="kw">impl </span>Stream&lt;Item = <span class="kw">crate</span>::Result&lt;(), eyre::Error&gt;&gt; {
@@ -358,12 +467,13 @@
 
         <span class="kw">for await </span>event <span class="kw">in </span>gameserver_events(client, namespace) {
             <span class="kw">let </span>ads = address_selector.as_ref();
-            <span class="kw">match </span>event<span class="question-mark">? </span>{
+            <span class="kw">match </span>track_event(GAMESERVER, event<span class="question-mark">?</span>) {
                 Event::Apply(result) =&gt; {
                     <span class="kw">let </span>server = <span class="kw">match </span>result.<span class="number">0 </span>{
                         <span class="prelude-val">Ok</span>(server) =&gt; server,
                         <span class="prelude-val">Err</span>(error) =&gt; {
                             <span class="macro">tracing::debug!</span>(%error, <span class="string">"couldn't decode gameserver event"</span>);
+                            metrics::k8s::errors_total(GAMESERVER, <span class="kw-2">&amp;</span>error);
                             <span class="kw">continue</span>;
                         }
                     };
@@ -371,17 +481,20 @@
                     <span class="macro">tracing::debug!</span>(<span class="string">"received applied event from k8s"</span>);
                     <span class="kw">if </span>!server.is_allocated() {
                         <span class="kw">yield </span><span class="prelude-val">Ok</span>(());
+                        metrics::k8s::gameservers_total_unallocated();
                         <span class="macro">tracing::debug!</span>(<span class="string">"skipping unallocated server"</span>);
                         <span class="kw">continue</span>;
                     }
 
                     <span class="kw">let </span><span class="prelude-val">Some</span>(endpoint) = server.endpoint(ads) <span class="kw">else </span>{
+                        metrics::k8s::gameservers_total_invalid();
                         <span class="macro">tracing::warn!</span>(selector=<span class="question-mark">?</span>ads, <span class="string">"received invalid gameserver to apply from k8s"</span>);
                         <span class="kw">continue</span>;
                     };
                     <span class="macro">tracing::debug!</span>(endpoint=%serde_json::to_value(<span class="kw-2">&amp;</span>endpoint).unwrap(), <span class="string">"Adding endpoint"</span>);
-                    config.clusters.write()
-                        .replace(locality.clone(), endpoint);
+                    metrics::k8s::gameservers_total_valid();
+                    clusters.write()
+                        .replace(<span class="prelude-val">None</span>, locality.clone(), endpoint);
                 }
                 Event::Init =&gt; {},
                 Event::InitApply(result) =&gt; {
@@ -395,8 +508,13 @@
 
                     <span class="kw">if </span>server.is_allocated() {
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(ep) = server.endpoint(ads) {
+                            metrics::k8s::gameservers_total_valid();
                             servers.insert(ep);
+                        } <span class="kw">else </span>{
+                            metrics::k8s::gameservers_total_invalid();
                         }
+                    } <span class="kw">else </span>{
+                        metrics::k8s::gameservers_total_unallocated();
                     }
                 }
                 Event::InitDone =&gt; {
@@ -407,12 +525,13 @@
                         <span class="string">"Restarting with endpoints"
                     </span>);
 
-                    config.clusters.write().insert(locality.clone(), std::mem::take(<span class="kw-2">&amp;mut </span>servers));
+                    clusters.write().insert(<span class="prelude-val">None</span>, locality.clone(), std::mem::take(<span class="kw-2">&amp;mut </span>servers));
                 }
                 Event::Delete(result) =&gt; {
                     <span class="kw">let </span>server = <span class="kw">match </span>result.<span class="number">0 </span>{
                         <span class="prelude-val">Ok</span>(server) =&gt; server,
                         <span class="prelude-val">Err</span>(error) =&gt; {
+                            metrics::k8s::errors_total(GAMESERVER, <span class="kw-2">&amp;</span>error);
                             <span class="macro">tracing::debug!</span>(%error, <span class="string">"couldn't decode gameserver event"</span>);
                             <span class="kw">continue</span>;
                         }
@@ -420,13 +539,14 @@
 
                     <span class="macro">tracing::debug!</span>(<span class="string">"received delete event from k8s"</span>);
                     <span class="kw">let </span>found = <span class="kw">if let </span><span class="prelude-val">Some</span>(endpoint) = server.endpoint(ads) {
-                        config.clusters.write().remove_endpoint(<span class="kw-2">&amp;</span>endpoint)
+                        clusters.write().remove_endpoint(<span class="kw-2">&amp;</span>endpoint)
                     } <span class="kw">else </span>{
-                        config.clusters.write().remove_endpoint_if(|endpoint| {
+                        clusters.write().remove_endpoint_if(|endpoint| {
                             endpoint.metadata.unknown.get(<span class="string">"name"</span>) == server.metadata.name.clone().map(From::from).as_ref()
                         })
                     };
 
+                    metrics::k8s::gameservers_deletions_total(found);
                     <span class="kw">if </span>!found {
                         <span class="macro">tracing::debug!</span>(
                             endpoint=%serde_json::to_value(server.endpoint(ads)).unwrap(),
@@ -437,7 +557,7 @@
                 }
             };
 
-            config.apply_metrics();
+            <span class="kw">crate</span>::metrics::apply_clusters(<span class="kw-2">&amp;</span>clusters);
             <span class="kw">yield </span><span class="prelude-val">Ok</span>(());
         }
     }

@@ -24,9 +24,9 @@
         <link rel="stylesheet" href="../../../fonts/fonts.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="../../../highlight.css">
-        <link rel="stylesheet" href="../../../tomorrow-night.css">
-        <link rel="stylesheet" href="../../../ayu-highlight.css">
+        <link rel="stylesheet" id="highlight-css" href="../../../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../../../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../../../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
 
@@ -202,7 +202,7 @@ properties:
     format: uint
     minimum: 0.0
   period:
-    description: The duration in seconds during which max_packets applies. If none is provided, it defaults to one second.
+    description: The duration in seconds during which `max_packets` applies. If none is provided, it defaults to one second.
     type: integer
     format: uint32
     minimum: 0.0

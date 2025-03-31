@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/test/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="qt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/test/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="qt" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0 (4d91de4e4 2025-02-17)" data-channel="1.85.0" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">qt/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -730,22 +731,49 @@
 <a href="#730" id="730">730</a>
 <a href="#731" id="731">731</a>
 <a href="#732" id="732">732</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>quilkin::{
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a></pre></div><pre class="rust"><code><span class="kw">use </span>quilkin::{
+    Config,
+    collections::{BufferPool, PoolBuffer},
     components::{<span class="self">self</span>, RunArgs},
     config::Providers,
     net::TcpListener,
+    signal::ShutdownTx,
     test::TestConfig,
-    Config, ShutdownTx,
 };
 <span class="kw">pub use </span>serde_json::json;
 <span class="kw">use </span>std::{net::SocketAddr, num::NonZeroUsize, path::PathBuf, sync::Arc};
 <span class="kw">use </span>tokio::sync::mpsc;
 
-<span class="kw">pub static </span>BUFFER_POOL: once_cell::sync::Lazy&lt;Arc&lt;quilkin::pool::BufferPool&gt;&gt; =
-    once_cell::sync::Lazy::new(|| Arc::new(quilkin::pool::BufferPool::default()));
+<span class="kw">pub mod </span>xdp_util;
+
+<span class="kw">pub static </span>BUFFER_POOL: once_cell::sync::Lazy&lt;Arc&lt;BufferPool&gt;&gt; =
+    once_cell::sync::Lazy::new(|| Arc::new(BufferPool::default()));
 
 <span class="attr">#[inline]
-</span><span class="kw">pub fn </span>alloc_buffer(data: <span class="kw">impl </span>AsRef&lt;[u8]&gt;) -&gt; quilkin::pool::PoolBuffer {
+</span><span class="kw">pub fn </span>alloc_buffer(data: <span class="kw">impl </span>AsRef&lt;[u8]&gt;) -&gt; PoolBuffer {
     BUFFER_POOL.clone().alloc_slice(data.as_ref())
 }
 
@@ -779,10 +807,10 @@
     }};
 }
 
-<span class="kw">pub use </span>tracing::{subscriber::DefaultGuard, Level};
+<span class="kw">pub use </span>tracing::{Level, subscriber::DefaultGuard};
 
 <span class="kw">pub fn </span>init_logging(level: Level, test_pkg: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str) -&gt; DefaultGuard {
-    <span class="kw">use </span>tracing_subscriber::{layer::SubscriberExt <span class="kw">as _</span>, Layer <span class="kw">as _</span>};
+    <span class="kw">use </span>tracing_subscriber::{Layer <span class="kw">as _</span>, layer::SubscriberExt <span class="kw">as _</span>};
     <span class="kw">let </span>layer = tracing_subscriber::fmt::layer()
         .with_test_writer()
         .with_filter(tracing_subscriber::filter::LevelFilter::from_level(level))
@@ -891,7 +919,7 @@
 <span class="kw">impl </span>ConfigFile {
     <span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, update: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;mut </span>TestConfig)) {
         update(<span class="kw-2">&amp;mut </span><span class="self">self</span>.config);
-        <span class="self">self</span>.config.write_to_file(<span class="kw-2">&amp;</span><span class="self">self</span>.path)
+        <span class="self">self</span>.config.write_to_file(<span class="kw-2">&amp;</span><span class="self">self</span>.path);
     }
 }
 
@@ -1038,11 +1066,8 @@
             PailConfig::Relay(rpc) =&gt; {
                 <span class="kw">use </span>components::relay;
 
-                <span class="kw">let </span>xds_listener = TcpListener::bind(<span class="prelude-val">None</span>).unwrap();
-                <span class="kw">let </span>mds_listener = TcpListener::bind(<span class="prelude-val">None</span>).unwrap();
-
-                <span class="kw">let </span>xds_port = xds_listener.port();
-                <span class="kw">let </span>mds_port = mds_listener.port();
+                <span class="kw">let </span>xds_port = TcpListener::bind(<span class="prelude-val">None</span>).unwrap().port();
+                <span class="kw">let </span>mds_port = TcpListener::bind(<span class="prelude-val">None</span>).unwrap().port();
 
                 <span class="kw">let </span>path = td.join(spc.name);
                 <span class="kw">let </span><span class="kw-2">mut </span>tc = rpc.config.unwrap_or_default();
@@ -1052,15 +1077,16 @@
                 <span class="kw">let </span>config_path = path.clone();
 
                 <span class="kw">let </span>(shutdown, shutdown_rx) =
-                    quilkin::make_shutdown_channel(quilkin::ShutdownKind::Testing);
+                    quilkin::signal::channel(quilkin::signal::ShutdownKind::Testing);
 
                 <span class="kw">let </span>config = Arc::new(Config::default_non_agent());
-                config.id.store(Arc::new(spc.name.into()));
+                config.dyn_cfg.id.store(Arc::new(spc.name.into()));
 
                 <span class="kw">let </span>task = tokio::spawn(
                     relay::Relay {
-                        xds_listener,
-                        mds_listener,
+                        xds_port,
+                        mds_port,
+                        locality: <span class="prelude-val">None</span>,
                         provider: <span class="prelude-val">Some</span>(Providers::File { path }),
                     }
                     .run(RunArgs {
@@ -1121,15 +1147,15 @@
                     .collect();
 
                 <span class="kw">let </span>(shutdown, shutdown_rx) =
-                    quilkin::make_shutdown_channel(quilkin::ShutdownKind::Testing);
+                    quilkin::signal::channel(quilkin::signal::ShutdownKind::Testing);
 
-                <span class="kw">let </span>qcmp_socket =
-                    quilkin::net::raw_socket_with_reuse(<span class="number">0</span>).expect(<span class="string">"failed to bind qcmp socket"</span>);
-                <span class="kw">let </span>qcmp_port = quilkin::net::socket_port(<span class="kw-2">&amp;</span>qcmp_socket);
+                <span class="kw">let </span>port = quilkin::net::socket_port(
+                    <span class="kw-2">&amp;</span>quilkin::net::raw_socket_with_reuse(<span class="number">0</span>).expect(<span class="string">"failed to bind qcmp socket"</span>),
+                );
 
                 <span class="kw">let </span>config_path = path.clone();
                 <span class="kw">let </span>config = Arc::new(Config::default_agent());
-                config.id.store(Arc::new(spc.name.into()));
+                config.dyn_cfg.id.store(Arc::new(spc.name.into()));
                 <span class="kw">let </span>acfg = config.clone();
 
                 <span class="kw">let </span>task = tokio::spawn(<span class="kw">async move </span>{
@@ -1137,7 +1163,7 @@
                         locality: <span class="prelude-val">None</span>,
                         icao_code: <span class="prelude-val">Some</span>(apc.icao_code),
                         relay_servers,
-                        qcmp_socket,
+                        port,
                         provider: <span class="prelude-val">Some</span>(Providers::File { path }),
                         address_selector: <span class="prelude-val">None</span>,
                     }
@@ -1150,7 +1176,7 @@
                 </span>});
 
                 <span class="self">Self</span>::Agent(AgentPail {
-                    qcmp_port,
+                    qcmp_port: port,
                     task,
                     shutdown,
                     config_file: <span class="prelude-val">Some</span>(ConfigFile {
@@ -1186,7 +1212,7 @@
                     .collect();
 
                 <span class="kw">let </span>(shutdown, shutdown_rx) =
-                    quilkin::make_shutdown_channel(quilkin::ShutdownKind::Testing);
+                    quilkin::signal::channel(quilkin::signal::ShutdownKind::Testing);
 
                 <span class="kw">let </span>(tx, orx) = tokio::sync::oneshot::channel();
 
@@ -1198,7 +1224,11 @@
                     }
 
                     <span class="kw">if </span>!cfg.filters.is_empty() {
-                        config.filters.store(Arc::new(cfg.filters));
+                        config
+                            .dyn_cfg
+                            .filters()
+                            .unwrap()
+                            .store(Arc::new(cfg.filters));
                     }
                 }
 
@@ -1218,11 +1248,13 @@
 
                 <span class="kw">if </span>!endpoints.is_empty() {
                     config
-                        .clusters
+                        .dyn_cfg
+                        .clusters()
+                        .unwrap()
                         .modify(|clusters| clusters.insert_default(endpoints));
                 }
 
-                config.id.store(Arc::new(spc.name.into()));
+                config.dyn_cfg.id.store(Arc::new(spc.name.into()));
                 <span class="kw">let </span>pconfig = config.clone();
 
                 <span class="kw">let </span>(rttx, rtrx) = tokio::sync::mpsc::unbounded_channel();
@@ -1230,14 +1262,12 @@
                 <span class="kw">let </span>task = tokio::spawn(<span class="kw">async move </span>{
                     components::proxy::Proxy {
                         num_workers: NonZeroUsize::new(<span class="number">1</span>).unwrap(),
-                        mmdb: <span class="prelude-val">None</span>,
-                        to: Vec::new(),
-                        to_tokens: <span class="prelude-val">None</span>,
                         management_servers,
-                        socket,
+                        socket: <span class="prelude-val">Some</span>(socket),
                         qcmp,
                         phoenix,
                         notifier: <span class="prelude-val">Some</span>(rttx),
+                        ..Default::default()
                     }
                     .run(
                         RunArgs {
@@ -1400,7 +1430,7 @@
         <span class="kw">match </span>pail {
             Pail::Relay(rp) =&gt; rp.config_file.take().unwrap(),
             Pail::Agent(ap) =&gt; ap.config_file.take().unwrap(),
-            <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">"no config_file for this pail"</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">"no config_file for this pail"</span>),
         }
     }
 
@@ -1425,8 +1455,8 @@
     <span class="doccomment">/// Sleeps for the specified number of milliseconds
     </span><span class="attr">#[inline]
     </span><span class="kw">pub async fn </span>sleep(<span class="kw-2">&amp;</span><span class="self">self</span>, ms: u64) {
-        tokio::time::sleep(std::time::Duration::from_millis(ms)).<span class="kw">await
-    </span>}
+        tokio::time::sleep(std::time::Duration::from_millis(ms)).<span class="kw">await</span>;
+    }
 
     <span class="doccomment">/// Runs a future, expecting it complete before the specified timeout
     </span><span class="attr">#[inline]
@@ -1461,5 +1491,23 @@
             .<span class="kw">await
             </span>.expect_err(<span class="string">"expected future to timeout"</span>);
     }
+}
+
+<span class="attr">#[macro_export]
+</span><span class="macro">macro_rules!</span> filter_chain {
+    ([$(<span class="macro-nonterminal">$kind</span>:ident =&gt; <span class="macro-nonterminal">$filter</span>:expr,)<span class="kw-2">*</span>]) =&gt; {
+        quilkin::filters::FilterChain::testing([
+            $(
+                quilkin::filters::FilterInstance::testing(quilkin::filters::<span class="macro-nonterminal">$kind::testing</span>(<span class="macro-nonterminal">$filter</span>))
+            ),*
+        ])
+    };
+    ([$(<span class="macro-nonterminal">$kind</span>:ident =&gt; <span class="macro-nonterminal">$filter</span>:expr),<span class="kw-2">*</span>]) =&gt; {
+        quilkin::filters::FilterChain::testing([
+            $(
+                quilkin::filters::FilterInstance::testing(quilkin::filters::<span class="macro-nonterminal">$kind::testing</span>(<span class="macro-nonterminal">$filter</span>))
+            ),*
+        ])
+    };
 }
 </code></pre></div></section></main></body></html>
