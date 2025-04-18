@@ -103,7 +103,12 @@
 <a href="#102" id="102">102</a>
 <a href="#103" id="103">103</a>
 <a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -127,6 +132,7 @@
     Filter(<span class="kw">crate</span>::filters::FilterError),
     Session(<span class="kw">super</span>::sessions::SessionError),
     Io(std::io::Error),
+    DisallowedSourceIP(std::net::IpAddr),
 }
 
 <span class="kw">impl </span>PipelineError {
@@ -152,6 +158,7 @@
             <span class="self">Self</span>::Filter(fe) =&gt; fe.discriminant(),
             <span class="self">Self</span>::Session(<span class="kw">_</span>) =&gt; <span class="string">"session"</span>,
             <span class="self">Self</span>::Io(<span class="kw">_</span>) =&gt; <span class="string">"io"</span>,
+            <span class="self">Self</span>::DisallowedSourceIP(<span class="kw">_</span>) =&gt; <span class="string">"disallowed source ip"</span>,
         }
     }
 }
@@ -165,6 +172,7 @@
             <span class="self">Self</span>::Filter(fe) =&gt; <span class="macro">write!</span>(f, <span class="string">"filter {fe}"</span>),
             <span class="self">Self</span>::Session(session) =&gt; <span class="macro">write!</span>(f, <span class="string">"session error: {session}"</span>),
             <span class="self">Self</span>::Io(io) =&gt; <span class="macro">write!</span>(f, <span class="string">"OS level error: {io}"</span>),
+            <span class="self">Self</span>::DisallowedSourceIP(ip) =&gt; <span class="macro">write!</span>(f, <span class="string">"disallowed ip: {ip}"</span>),
         }
     }
 }
@@ -188,6 +196,7 @@
             (<span class="self">Self</span>::Filter(fa), <span class="self">Self</span>::Filter(fb)) =&gt; fa.eq(fb),
             (<span class="self">Self</span>::Session(sa), <span class="self">Self</span>::Session(sb)) =&gt; sa.eq(sb),
             (<span class="self">Self</span>::Io(ia), <span class="self">Self</span>::Io(ib)) =&gt; ia.kind().eq(<span class="kw-2">&amp;</span>ib.kind()),
+            (<span class="self">Self</span>::DisallowedSourceIP(ia), <span class="self">Self</span>::DisallowedSourceIP(ib)) =&gt; ia.eq(ib),
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         }
     }
@@ -205,6 +214,7 @@
             <span class="self">Self</span>::Session(se) =&gt; Hash::hash(<span class="kw-2">&amp;</span>se, state),
             <span class="self">Self</span>::Io(io) =&gt; Hash::hash(<span class="kw-2">&amp;</span>io.kind(), state),
             <span class="self">Self</span>::NoUpstreamEndpoints =&gt; {}
+            <span class="self">Self</span>::DisallowedSourceIP(ip) =&gt; Hash::hash(<span class="kw-2">&amp;</span>ip, state),
         }
     }
 }

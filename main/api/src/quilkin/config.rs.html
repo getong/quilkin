@@ -1309,7 +1309,24 @@
 <a href="#1308" id="1308">1308</a>
 <a href="#1309" id="1309">1309</a>
 <a href="#1310" id="1310">1310</a>
-<a href="#1311" id="1311">1311</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
+<a href="#1313" id="1313">1313</a>
+<a href="#1314" id="1314">1314</a>
+<a href="#1315" id="1315">1315</a>
+<a href="#1316" id="1316">1316</a>
+<a href="#1317" id="1317">1317</a>
+<a href="#1318" id="1318">1318</a>
+<a href="#1319" id="1319">1319</a>
+<a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1328,6 +1345,7 @@
 </span><span class="doccomment">//! Quilkin configuration.
 
 </span><span class="kw">use </span>std::{
+    collections::BTreeSet,
     net::{IpAddr, SocketAddr},
     sync::{
         Arc,
@@ -2191,6 +2209,22 @@
 
         <span class="prelude-val">Ok</span>(())
     }
+
+    <span class="kw">pub fn </span>cluster(
+        <span class="self">self</span>,
+        remote_addr: <span class="prelude-ty">Option</span>&lt;std::net::IpAddr&gt;,
+        locality: <span class="prelude-ty">Option</span>&lt;quilkin_xds::locality::Locality&gt;,
+        cluster: BTreeSet&lt;<span class="kw">crate</span>::net::Endpoint&gt;,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="prelude-val">Some</span>(clusters) = <span class="self">self</span>.dyn_cfg.clusters() <span class="kw">else </span>{
+            <span class="kw">return </span><span class="self">self</span>;
+        };
+
+        clusters.modify(|clusters| {
+            clusters.insert(remote_addr, locality, cluster);
+        });
+        <span class="self">self
+    </span>}
 
     <span class="attr">#[inline]
     </span><span class="kw">pub fn </span>apply_metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) {
