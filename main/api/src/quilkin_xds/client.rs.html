@@ -609,7 +609,30 @@
 <a href="#608" id="608">608</a>
 <a href="#609" id="609">609</a>
 <a href="#610" id="610">610</a>
-<a href="#611" id="611">611</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -879,32 +902,55 @@
                             </span>control_plane.config.on_changed(this)
                         });
 
-                        <span class="kw">let </span><span class="kw-2">mut </span>stream = control_plane.delta_aggregated_resources(stream).<span class="kw">await</span><span class="question-mark">?</span>;
-                        is_healthy.store(<span class="bool-val">true</span>, Ordering::SeqCst);
+                        <span class="kw">match </span>control_plane.delta_aggregated_resources(stream).<span class="kw">await </span>{
+                            <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>stream) =&gt; {
+                                is_healthy.store(<span class="bool-val">true</span>, Ordering::SeqCst);
 
-                        <span class="kw">loop </span>{
-                            <span class="kw">if </span>config.is_leader() == <span class="prelude-val">Some</span>(<span class="bool-val">false</span>) {
-                                <span class="macro">tracing::warn!</span>(<span class="string">"lost leader lock mid-stream, disconnecting"</span>);
-                                <span class="kw">break</span>;
+                                <span class="kw">loop </span>{
+                                    <span class="kw">if </span>config.is_leader() == <span class="prelude-val">Some</span>(<span class="bool-val">false</span>) {
+                                        <span class="macro">tracing::warn!</span>(<span class="string">"lost leader lock mid-stream, disconnecting"</span>);
+                                        <span class="kw">break</span>;
+                                    }
+
+                                    <span class="kw">const </span>TIMEOUT_INTERVAL: Duration = Duration::from_secs(<span class="number">30</span>);
+                                    <span class="kw">match </span>tokio::time::timeout(TIMEOUT_INTERVAL, stream.next()).<span class="kw">await </span>{
+                                        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(response))) =&gt; <span class="kw">match </span>ds.send_response(response).<span class="kw">await </span>{
+                                            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
+                                                <span class="macro">tracing::trace!</span>(<span class="string">"ACK successfully sent"</span>);
+                                            }
+                                            <span class="prelude-val">Err</span>(error) =&gt; {
+                                                <span class="macro">tracing::warn!</span>(%error, <span class="string">"error sending ACK"</span>);
+                                                <span class="kw">break</span>;
+                                            }
+                                        }
+                                        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(error))) =&gt; {
+                                            <span class="macro">tracing::warn!</span>(%error, <span class="string">"error receiving delta response"</span>);
+                                            <span class="kw">break</span>;
+                                        }
+                                        <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
+                                            <span class="macro">tracing::debug!</span>(<span class="string">"delta stream terminated by client"</span>);
+                                            <span class="kw">break</span>;
+                                        }
+                                        <span class="prelude-val">Err</span>(error) =&gt; {
+                                            <span class="macro">tracing::trace!</span>(duration=TIMEOUT_INTERVAL.as_secs_f64(), %error, <span class="string">"no requests received"</span>);
+                                            <span class="kw">continue</span>;
+                                        }
+                                    }
+                                }
+
+                                change_watcher.abort();
+                                <span class="kw">let </span>_unused = change_watcher.<span class="kw">await</span>;
+                            },
+                            <span class="prelude-val">Err</span>(error) =&gt; {
+                                <span class="macro">tracing::warn!</span>(%error, error_debug=<span class="question-mark">?</span>error, <span class="string">"failed to acquire internal delta stream from config"</span>);
                             }
-
-                            <span class="kw">let </span><span class="prelude-val">Some</span>(result) = stream.next().<span class="kw">await else </span>{
-                                <span class="kw">break</span>;
-                            };
-
-                            <span class="kw">let </span>response = result<span class="question-mark">?</span>;
-                            <span class="macro">tracing::trace!</span>(<span class="string">"received delta discovery response"</span>);
-                            ds.send_response(response).<span class="kw">await</span><span class="question-mark">?</span>;
                         }
-
-                        change_watcher.abort();
-                        <span class="kw">let </span>_unused = change_watcher.<span class="kw">await</span>;
                     }
 
                     is_healthy.store(<span class="bool-val">false</span>, Ordering::SeqCst);
 
-                    <span class="comment">//tracing::warn!("lost connection to relay server, retrying");
-                    </span><span class="kw">let </span>new_client = MdsClient::connect_with_backoff(<span class="kw-2">&amp;</span><span class="self">self</span>.management_servers)
+                    <span class="macro">tracing::debug!</span>(<span class="string">"lost connection to relay server, retrying"</span>);
+                    <span class="kw">let </span>new_client = MdsClient::connect_with_backoff(<span class="kw-2">&amp;</span><span class="self">self</span>.management_servers)
                         .<span class="kw">await
                         </span>.unwrap()
                         .<span class="number">0</span>;

@@ -143,7 +143,8 @@
 <a href="#142" id="142">142</a>
 <a href="#143" id="143">143</a>
 <a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2024 Google LLC All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -168,6 +169,7 @@
 <span class="kw">const </span>RETRIES: u32 = <span class="number">25</span>;
 <span class="kw">const </span>BACKOFF_STEP: std::time::Duration = std::time::Duration::from_millis(<span class="number">250</span>);
 <span class="kw">const </span>MAX_DELAY: std::time::Duration = std::time::Duration::from_secs(<span class="number">2</span>);
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>NO_UPDATE_INTERVAL: std::time::Duration = std::time::Duration::from_secs(<span class="number">30</span>);
 
 <span class="doccomment">/// The available xDS source providers.
 </span><span class="attr">#[derive(Clone, Debug, clap::Subcommand)]

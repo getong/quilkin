@@ -79,7 +79,11 @@
 <a href="#78" id="78">78</a>
 <a href="#79" id="79">79</a>
 <a href="#80" id="80">80</a>
-<a href="#81" id="81">81</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2022 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -147,6 +151,10 @@
         <span class="kw">let </span>result = <span class="macro">tokio::select!</span> {
             result = configmap_reflector.try_next() =&gt; result,
             result = gameserver_reflector.try_next() =&gt; result,
+            <span class="kw">_ </span>= tokio::time::sleep(<span class="kw">crate</span>::config::providers::NO_UPDATE_INTERVAL) =&gt; {
+                <span class="macro">tracing::trace!</span>(duration_secs=<span class="kw">crate</span>::config::providers::NO_UPDATE_INTERVAL.as_secs_f64(), <span class="string">"no updates from gameservers or configmap"</span>);
+                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(()))
+            }
         };
 
         <span class="kw">match </span>result
