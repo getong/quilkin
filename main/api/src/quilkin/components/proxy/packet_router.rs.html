@@ -245,7 +245,12 @@
 <a href="#244" id="244">244</a>
 <a href="#245" id="245">245</a>
 <a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2024 Google LLC All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -364,15 +369,18 @@
             )));
         };
 
-        <span class="kw">match </span><span class="self">self</span>.source.ip() {
-            std::net::IpAddr::V4(ipv4) =&gt; {
-                <span class="kw">if </span>ipv4.is_loopback() || ipv4.is_multicast() || ipv4.is_broadcast() {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(PipelineError::DisallowedSourceIP(<span class="self">self</span>.source.ip()));
+        <span class="attr">#[cfg(not(debug_assertions))]
+        </span>{
+            <span class="kw">match </span><span class="self">self</span>.source.ip() {
+                std::net::IpAddr::V4(ipv4) =&gt; {
+                    <span class="kw">if </span>ipv4.is_loopback() || ipv4.is_multicast() || ipv4.is_broadcast() {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(PipelineError::DisallowedSourceIP(<span class="self">self</span>.source.ip()));
+                    }
                 }
-            }
-            std::net::IpAddr::V6(ipv6) =&gt; {
-                <span class="kw">if </span>ipv6.is_loopback() || ipv6.is_multicast() {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(PipelineError::DisallowedSourceIP(<span class="self">self</span>.source.ip()));
+                std::net::IpAddr::V6(ipv6) =&gt; {
+                    <span class="kw">if </span>ipv6.is_loopback() || ipv6.is_multicast() {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(PipelineError::DisallowedSourceIP(<span class="self">self</span>.source.ip()));
+                    }
                 }
             }
         }
@@ -442,7 +450,9 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use </span>quilkin_xds::locality::Locality;
+    <span class="attr">#![cfg(not(debug_assertions))]
+
+    </span><span class="kw">use </span>quilkin_xds::locality::Locality;
 
     <span class="kw">use </span><span class="kw">crate</span>::collections::BufferPool;
     <span class="kw">use </span><span class="kw">crate</span>::net::Endpoint;

@@ -332,7 +332,10 @@
 <a href="#331" id="331">331</a>
 <a href="#332" id="332">332</a>
 <a href="#333" id="333">333</a>
-<a href="#334" id="334">334</a></pre></div><pre class="rust"><code><span class="kw">use </span>serde::ser::SerializeMap;
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a></pre></div><pre class="rust"><code><span class="kw">use </span>serde::ser::SerializeMap;
 
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
@@ -417,6 +420,9 @@
                     });
                     <span class="self">self</span>.apply_metrics();
                 }
+                <span class="comment">// Updating the version doesn't make sense at runtime, but we don't
+                // want to to trace out
+                </span><span class="string">"version" </span>=&gt; {}
                 field =&gt; {
                     <span class="macro">tracing::debug!</span>(field, <span class="string">"unable to replace invalid field"</span>);
                 }
