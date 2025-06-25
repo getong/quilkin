@@ -271,7 +271,8 @@
 <a href="#270" id="270">270</a>
 <a href="#271" id="271">271</a>
 <a href="#272" id="272">272</a>
-<a href="#273" id="273">273</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2024 Google LLC All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -350,6 +351,7 @@
     }
 
     <span class="kw">pub fn </span>lookup(ip: std::net::IpAddr) -&gt; <span class="prelude-ty">Option</span>&lt;IpNetEntry&gt; {
+        <span class="kw">let </span>ip = ip.to_canonical();
         <span class="kw">let </span><span class="prelude-val">Some</span>(mmdb) = <span class="kw">crate</span>::MaxmindDb::instance().clone() <span class="kw">else </span>{
             <span class="macro">tracing::trace!</span>(<span class="string">"skipping mmdb telemetry, no maxmind database available"</span>);
             <span class="kw">return </span><span class="prelude-val">None</span>;

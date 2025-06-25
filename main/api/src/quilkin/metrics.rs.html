@@ -601,15 +601,7 @@
 <a href="#600" id="600">600</a>
 <a href="#601" id="601">601</a>
 <a href="#602" id="602">602</a>
-<a href="#603" id="603">603</a>
-<a href="#604" id="604">604</a>
-<a href="#605" id="605">605</a>
-<a href="#606" id="606">606</a>
-<a href="#607" id="607">607</a>
-<a href="#608" id="608">608</a>
-<a href="#609" id="609">609</a>
-<a href="#610" id="610">610</a>
-<a href="#611" id="611">611</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#603" id="603">603</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -625,7 +617,7 @@
  * limitations under the License.
  */
 
-</span><span class="kw">use crate</span>::{net::maxmind_db::MetricsIpNetEntry, time::UtcTimestamp};
+</span><span class="kw">use </span><span class="kw">crate</span>::net::maxmind_db::MetricsIpNetEntry;
 <span class="kw">use </span>once_cell::sync::Lazy;
 <span class="kw">use </span>prometheus::{
     DEFAULT_BUCKETS, Gauge, GaugeVec, Histogram, HistogramOpts, HistogramVec, IntCounter,
@@ -641,7 +633,6 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>READ: Direction = Direction::Read;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>WRITE: Direction = Direction::Write;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>ASN_LABEL: <span class="kw-2">&amp;</span>str = <span class="string">"asn"</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>PREFIX_LABEL: <span class="kw-2">&amp;</span>str = <span class="string">"ip_prefix"</span>;
 
 <span class="doccomment">/// Label value for [`DIRECTION_LABEL`] for `read` events
 </span><span class="kw">pub const </span>READ_DIRECTION_LABEL: <span class="kw-2">&amp;</span>str = <span class="string">"read"</span>;
@@ -821,13 +812,13 @@
                     <span class="string">"service_qcmp_bytes_total"</span>,
                     <span class="string">"Total number of bytes processed through QCMP"</span>,
                 },
-                <span class="kw-2">&amp;</span>[<span class="string">"kind"</span>, ASN_LABEL, PREFIX_LABEL],
+                <span class="kw-2">&amp;</span>[<span class="string">"kind"</span>, ASN_LABEL],
                 registry(),
             }
             .unwrap()
         });
 
-        METRIC.with_label_values(<span class="kw-2">&amp;</span>[kind, asn.asn, asn.prefix])
+        METRIC.with_label_values(<span class="kw-2">&amp;</span>[kind, asn.asn])
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>errors_total(reason: <span class="kw-2">&amp;</span>str, asn: <span class="kw-2">&amp;</span>AsnInfo&lt;<span class="lifetime">'_</span>&gt;) -&gt; IntCounter {
@@ -837,13 +828,13 @@
                     <span class="string">"service_qcmp_errors_total"</span>,
                     <span class="string">"total number of errors QCMP has encountered"</span>,
                 },
-                <span class="kw-2">&amp;</span>[<span class="string">"reason"</span>, ASN_LABEL, PREFIX_LABEL],
+                <span class="kw-2">&amp;</span>[<span class="string">"reason"</span>, ASN_LABEL],
                 registry(),
             }
             .unwrap()
         });
 
-        METRIC.with_label_values(<span class="kw-2">&amp;</span>[reason, asn.asn, asn.prefix])
+        METRIC.with_label_values(<span class="kw-2">&amp;</span>[reason, asn.asn])
     }
 
     <span class="kw">fn </span>packets_total(kind: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, asn: <span class="kw-2">&amp;</span>AsnInfo&lt;<span class="lifetime">'_</span>&gt;) -&gt; IntCounter {
@@ -853,36 +844,13 @@
                     <span class="string">"service_qcmp_packets_total"</span>,
                     <span class="string">"Total number of packets processed through QCMP"</span>,
                 },
-                <span class="kw-2">&amp;</span>[<span class="string">"kind"</span>, ASN_LABEL, PREFIX_LABEL],
+                <span class="kw-2">&amp;</span>[<span class="string">"kind"</span>, ASN_LABEL],
                 registry(),
             }
             .unwrap()
         });
 
-        METRIC.with_label_values(<span class="kw-2">&amp;</span>[kind, asn.asn, asn.prefix])
-    }
-
-    <span class="kw">pub fn </span>ingress_latency(
-        client_timestamp: UtcTimestamp,
-        received_at: UtcTimestamp,
-        asn: <span class="kw-2">&amp;</span>AsnInfo&lt;<span class="lifetime">'_</span>&gt;,
-    ) {
-        <span class="kw">static </span>METRIC: Lazy&lt;HistogramVec&gt; = Lazy::new(|| {
-            <span class="macro">prometheus::register_histogram_vec_with_registry!</span> {
-                <span class="macro">prometheus::histogram_opts!</span> {
-                    <span class="string">"service_qcmp_ingress_latency_seconds"</span>,
-                    <span class="string">"The time from when the client created the packet, to when QCMP received it."</span>,
-                    prometheus::exponential_buckets(BUCKET_START, BUCKET_FACTOR, BUCKET_COUNT).unwrap(),
-                },
-                <span class="kw-2">&amp;</span>[ASN_LABEL, PREFIX_LABEL],
-                registry(),
-            }
-            .unwrap()
-        });
-
-        METRIC
-            .with_label_values(<span class="kw-2">&amp;</span>[asn.asn, asn.prefix])
-            .observe((received_at - client_timestamp).duration().as_secs_f64());
+        METRIC.with_label_values(<span class="kw-2">&amp;</span>[kind, asn.asn])
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>packets_total_invalid(size: usize, asn_info: <span class="kw-2">&amp;</span>AsnInfo&lt;<span class="lifetime">'_</span>&gt;) {
@@ -1081,13 +1049,13 @@
                 <span class="string">"bytes_total"</span>,
                 <span class="string">"total number of bytes"</span>,
             },
-            <span class="kw-2">&amp;</span>[Direction::LABEL, ASN_LABEL, PREFIX_LABEL],
+            <span class="kw-2">&amp;</span>[Direction::LABEL, ASN_LABEL],
             registry(),
         }
         .unwrap()
     });
 
-    BYTES_TOTAL.with_label_values(<span class="kw-2">&amp;</span>[direction.label(), asn.asn, asn.prefix])
+    BYTES_TOTAL.with_label_values(<span class="kw-2">&amp;</span>[direction.label(), asn.asn])
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>errors_total(direction: Direction, display: <span class="kw-2">&amp;</span>str, asn: <span class="kw-2">&amp;</span>AsnInfo&lt;<span class="lifetime">'_</span>&gt;) -&gt; IntCounter {
@@ -1097,13 +1065,13 @@
                 <span class="string">"errors_total"</span>,
                 <span class="string">"total number of errors sending packets"</span>,
             },
-            <span class="kw-2">&amp;</span>[Direction::LABEL, <span class="string">"display"</span>, ASN_LABEL, PREFIX_LABEL],
+            <span class="kw-2">&amp;</span>[Direction::LABEL, <span class="string">"display"</span>, ASN_LABEL],
             registry(),
         }
         .unwrap()
     });
 
-    ERRORS_TOTAL.with_label_values(<span class="kw-2">&amp;</span>[direction.label(), display, asn.asn, asn.prefix])
+    ERRORS_TOTAL.with_label_values(<span class="kw-2">&amp;</span>[direction.label(), display, asn.asn])
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>packet_jitter(direction: Direction, asn: <span class="kw-2">&amp;</span>AsnInfo&lt;<span class="lifetime">'_</span>&gt;) -&gt; IntGauge {
@@ -1113,13 +1081,13 @@
                 <span class="string">"packet_jitter"</span>,
                 <span class="string">"The time between new packets"</span>,
             },
-            <span class="kw-2">&amp;</span>[Direction::LABEL, ASN_LABEL, PREFIX_LABEL],
+            <span class="kw-2">&amp;</span>[Direction::LABEL, ASN_LABEL],
             registry(),
         }
         .unwrap()
     });
 
-    PACKET_JITTER.with_label_values(<span class="kw-2">&amp;</span>[direction.label(), asn.asn, asn.prefix])
+    PACKET_JITTER.with_label_values(<span class="kw-2">&amp;</span>[direction.label(), asn.asn])
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>packets_total(direction: Direction, asn: <span class="kw-2">&amp;</span>AsnInfo&lt;<span class="lifetime">'_</span>&gt;) -&gt; IntCounter {
@@ -1129,13 +1097,13 @@
                 <span class="string">"packets_total"</span>,
                 <span class="string">"Total number of packets"</span>,
             },
-            <span class="kw-2">&amp;</span>[Direction::LABEL, ASN_LABEL, PREFIX_LABEL],
+            <span class="kw-2">&amp;</span>[Direction::LABEL, ASN_LABEL],
             registry(),
         }
         .unwrap()
     });
 
-    PACKETS_TOTAL.with_label_values(<span class="kw-2">&amp;</span>[direction.label(), asn.asn, asn.prefix])
+    PACKETS_TOTAL.with_label_values(<span class="kw-2">&amp;</span>[direction.label(), asn.asn])
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>packets_dropped_total(
@@ -1149,13 +1117,29 @@
                 <span class="string">"packets_dropped_total"</span>,
                 <span class="string">"Total number of dropped packets"</span>,
             },
-            <span class="kw-2">&amp;</span>[Direction::LABEL, <span class="string">"source"</span>, ASN_LABEL, PREFIX_LABEL],
+            <span class="kw-2">&amp;</span>[Direction::LABEL, <span class="string">"source"</span>, ASN_LABEL],
             registry(),
         }
         .unwrap()
     });
 
-    PACKETS_DROPPED.with_label_values(<span class="kw-2">&amp;</span>[direction.label(), source, asn.asn, asn.prefix])
+    PACKETS_DROPPED.with_label_values(<span class="kw-2">&amp;</span>[direction.label(), source, asn.asn])
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>provider_task_failures_total(provider_task: <span class="kw-2">&amp;</span>str) -&gt; IntCounter {
+    <span class="kw">static </span>PROVIDER_TASK_FAILURES_TOTAL: Lazy&lt;IntCounterVec&gt; = Lazy::new(|| {
+        <span class="macro">prometheus::register_int_counter_vec_with_registry!</span> {
+            <span class="macro">prometheus::opts!</span> {
+                <span class="string">"provider_task_failures_total"</span>,
+                <span class="string">"The number of times a provider task has failed and had to be restarted"</span>,
+            },
+            <span class="kw-2">&amp;</span>[<span class="string">"task"</span>],
+            registry(),
+        }
+        .unwrap()
+    });
+
+    PROVIDER_TASK_FAILURES_TOTAL.with_label_values(<span class="kw-2">&amp;</span>[provider_task])
 }
 
 <span class="doccomment">/// Create a generic metrics options.

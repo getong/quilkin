@@ -925,15 +925,7 @@
 <a href="#924" id="924">924</a>
 <a href="#925" id="925">925</a>
 <a href="#926" id="926">926</a>
-<a href="#927" id="927">927</a>
-<a href="#928" id="928">928</a>
-<a href="#929" id="929">929</a>
-<a href="#930" id="930">930</a>
-<a href="#931" id="931">931</a>
-<a href="#932" id="932">932</a>
-<a href="#933" id="933">933</a>
-<a href="#934" id="934">934</a>
-<a href="#935" id="935">935</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#927" id="927">927</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2024 Google LLC All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -980,14 +972,14 @@
     listener: <span class="kw">crate</span>::net::TcpListener,
     datacenters: config::Watch&lt;config::DatacenterMap&gt;,
     phoenix: Phoenix&lt;M&gt;,
-) -&gt; <span class="kw">crate</span>::Result&lt;<span class="kw">crate</span>::cli::Finalizer&gt; {
+    <span class="kw-2">mut </span>shutdown_rx: <span class="kw">crate</span>::signal::ShutdownRx,
+) -&gt; <span class="kw">crate</span>::Result&lt;<span class="kw">crate</span>::service::Finalizer&gt; {
     <span class="kw">use </span>eyre::WrapErr <span class="kw">as _</span>;
     <span class="kw">use </span>hyper::{Response, StatusCode};
 
     phoenix.add_nodes_from_config(<span class="kw-2">&amp;</span>datacenters);
 
     <span class="kw">let </span><span class="kw-2">mut </span>dc_watcher = datacenters.watch();
-    <span class="kw">let </span>(shutdown_tx, <span class="kw-2">mut </span>shutdown_rx) = <span class="kw">crate</span>::signal::channel(Default::default());
 
     <span class="kw">let </span>ph_thread = std::thread::Builder::new()
         .name(<span class="string">"phoenix-http"</span>.into())
@@ -1008,7 +1000,7 @@
                 <span class="kw">let </span>datacenters = datacenters.clone();
 
                 <span class="kw">async move </span>{
-                    <span class="kw">let </span>json = <span class="kw">crate</span>::config::Slot::new(serde_json::Map::default());
+                    <span class="kw">let </span>json = Arc::new(arc_swap::ArcSwap::new(Arc::new(serde_json::Map::default())));
 
                     tokio::spawn({
                         <span class="kw">let </span>phoenix = phoenix.clone();
@@ -1147,17 +1139,7 @@
         })
         .context(<span class="string">"failed to spawn phoenix-http thread"</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>finalizer = Box::new(<span class="kw">move </span>|shutdown: <span class="kw-2">&amp;</span><span class="kw">crate</span>::signal::ShutdownRx| {
-        <span class="kw">let </span>kind = <span class="kw-2">*</span>shutdown.borrow();
-        <span class="kw">if </span>shutdown_tx.send(kind).is_err() {
-            <span class="macro">tracing::error!</span>(<span class="string">"phoenix thread is already shutdown"</span>);
-            <span class="kw">return</span>;
-        }
-
-        <span class="kw">if </span>kind != <span class="kw">crate</span>::signal::ShutdownKind::Normal {
-            <span class="kw">return</span>;
-        }
-
+    <span class="kw">let </span>finalizer = Box::new(<span class="kw">move </span>|| {
         <span class="kw">let </span>start = std::time::Instant::now();
         <span class="kw">if </span>ph_thread.join().is_err() {
             <span class="macro">tracing::error!</span>(<span class="string">"error joining phoenix thread"</span>);
@@ -1813,9 +1795,10 @@
             },
         );
 
-        <span class="kw">let </span>(_tx, rx) = <span class="kw">crate</span>::signal::channel(Default::default());
+        <span class="kw">let </span>(tx, rx) = <span class="kw">crate</span>::signal::channel();
         <span class="kw">let </span>socket = raw_socket_with_reuse(qcmp_port).unwrap();
-        <span class="kw">crate</span>::codec::qcmp::spawn(socket, rx.clone()).unwrap();
+        <span class="kw">let </span>pc = <span class="kw">crate</span>::codec::qcmp::port_channel();
+        <span class="kw">crate</span>::codec::qcmp::spawn(socket, pc.subscribe(), rx.clone()).unwrap();
         tokio::time::sleep(Duration::from_millis(<span class="number">150</span>)).<span class="kw">await</span>;
 
         <span class="kw">let </span>measurement =
@@ -1826,7 +1809,7 @@
             .interval_range(Duration::from_millis(<span class="number">10</span>)..Duration::from_millis(<span class="number">15</span>))
             .build();
 
-        <span class="kw">let </span>end = <span class="kw">super</span>::spawn(qcmp_listener, datacenters, phoenix).unwrap();
+        <span class="kw">let </span>end = <span class="kw">super</span>::spawn(qcmp_listener, datacenters, phoenix, rx).unwrap();
         tokio::time::sleep(Duration::from_millis(<span class="number">150</span>)).<span class="kw">await</span>;
 
         <span class="kw">let </span>client =
@@ -1865,7 +1848,8 @@
             );
         }
 
-        end(<span class="kw-2">&amp;</span>rx);
+        <span class="kw">let _ </span>= tx.send(());
+        end();
     }
 }
 </code></pre></div></section></main></body></html>

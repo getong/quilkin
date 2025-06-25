@@ -65,7 +65,9 @@
 <a href="#64" id="64">64</a>
 <a href="#65" id="65">65</a>
 <a href="#66" id="66">66</a>
-<a href="#67" id="67">67</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -88,7 +90,7 @@
 <span class="kw">pub mod </span>net;
 <span class="kw">pub mod </span>server;
 
-<span class="kw">pub use </span>client::{AdsClient, Client};
+<span class="kw">pub use </span>client::{Client, delta_subscribe};
 
 <span class="kw">pub use </span>generated::envoy::{
     config::core::v3::{<span class="self">self </span><span class="kw">as </span>core, socket_address},
@@ -132,4 +134,6 @@
 
     <span class="bool-val">false
 </span>}
+
+<span class="kw">pub type </span>ShutdownSignal = tokio::sync::watch::Receiver&lt;()&gt;;
 </code></pre></div></section></main></body></html>

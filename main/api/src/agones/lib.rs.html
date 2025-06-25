@@ -735,7 +735,10 @@
 <a href="#734" id="734">734</a>
 <a href="#735" id="735">735</a>
 <a href="#736" id="736">736</a>
-<a href="#737" id="737">737</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2022 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -787,7 +790,7 @@
 <span class="kw">use </span>tokio::{sync::OnceCell, time::timeout};
 <span class="kw">use </span>tracing::debug;
 
-<span class="kw">use </span>quilkin::config::providers::k8s::agones::{
+<span class="kw">use </span>quilkin::providers::k8s::agones::{
     Fleet, FleetSpec, GameServer, GameServerPort, GameServerSpec, GameServerState,
     GameServerTemplateSpec,
 };
@@ -1056,8 +1059,9 @@
     <span class="kw">let </span><span class="kw-2">mut </span>container = quilkin_container(
         client,
         <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[
-            <span class="string">"proxy"</span>.into(),
-            <span class="macro">format!</span>(<span class="string">"--management-server={management_server}"</span>),
+            <span class="string">"--service.udp"</span>.into(),
+            <span class="string">"--service.qcmp"</span>.into(),
+            <span class="macro">format!</span>(<span class="string">"--provider.xds.endpoints={management_server}"</span>),
         ]),
         <span class="prelude-val">None</span>,
         current,
@@ -1198,10 +1202,12 @@
 
     resources.insert(<span class="string">"cpu"</span>.into(), Quantity(<span class="string">"30m"</span>.into()));
     resources.insert(<span class="string">"memory"</span>.into(), Quantity(<span class="string">"32Mi"</span>.into()));
+    <span class="kw">let </span>labels = BTreeMap::from([(<span class="string">"role"</span>.to_string(), <span class="string">"gameserver"</span>.to_string())]);
 
     GameServer {
         metadata: ObjectMeta {
             generate_name: <span class="prelude-val">Some</span>(<span class="string">"gameserver-"</span>.into()),
+            labels: <span class="prelude-val">Some</span>(labels.clone()),
             ..Default::default()
         },
         spec: GameServerSpec {

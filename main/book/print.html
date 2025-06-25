@@ -42,6 +42,17 @@
         <script src="toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
@@ -119,7 +130,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -267,8 +278,8 @@ proxy. To see a basic usage of the command-line interface run through the
 for deploying quilkin for your game network.</li>
 </ul>
 <pre><code class="language-shell">$ quilkin --help
-{"timestamp":"2025-05-09T04:45:16.468137Z","level":"INFO","fields":{"message":"Starting Quilkin","version":"0.10.0-dev","commit":"a6d1af35c2bf02a48177f820619e0c406a43eec8"},"target":"quilkin::cli","filename":"src/cli.rs","threadId":"ThreadId(1)"}
-{"timestamp":"2025-05-09T04:45:16.468309Z","level":"ERROR","fields":{"message":"fatal error","error":"no service specified, shutting down"},"target":"quilkin","filename":"src/main.rs","threadId":"ThreadId(1)"}
+{"timestamp":"2025-06-25T16:25:06.220953Z","level":"INFO","fields":{"message":"Starting Quilkin","version":"0.10.0-dev","commit":"9f0b3a72bb7f7be584277891a200ada57a962369"},"target":"quilkin::cli","filename":"src/cli.rs","threadId":"ThreadId(1)"}
+{"timestamp":"2025-06-25T16:25:06.221160Z","level":"ERROR","fields":{"message":"fatal error","error":"no service, provider, or command specified, shutting down"},"target":"quilkin","filename":"src/main.rs","threadId":"ThreadId(1)"}
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
 <p>There are variety of automated and manual methods for installing Quilkin onto
@@ -280,7 +291,7 @@ your local machine through <a href="installation.html#cargo">Cargo</a>.</p>
 <dl>
   <dt><strong>Source / Method</strong></dt>
   <dd>
-<pre><code>us-docker.pkg.dev/quilkin/release/quilkin:0.10.0-dev-a6d1af3
+<pre><code>us-docker.pkg.dev/quilkin/release/quilkin:0.10.0-dev-9f0b3a7
 </code></pre>
   </dd>
   <dt><strong>Notes</strong></dt>
@@ -495,8 +506,8 @@ Fleet, that will only be accessible through Quilkin that is hosted within the sa
 an out-of-the-box control plane for integration between Agones and <a href="deployment/quickstarts/../../services/xds.html">Quilkin's xDS configuration API</a> with
 minimal effort.</p>
 <h2 id="2-install-quilkin-agones-xds-provider"><a class="header" href="#2-install-quilkin-agones-xds-provider">2. Install Quilkin Agones xDS Provider</a></h2>
-<p>To install Quilkin as an Agones integrated xDS control plane, we can create a deployment of Quilkin running as
-<code>quilkin manage agones</code>, with the appropriate permissions.</p>
+<p>To install Quilkin as an Agones integrated xDS control plane, we can create a deployment of Quilkin running with
+<code>provider.k8s.agones</code>, with the appropriate permissions.</p>
 <p>Run the following:</p>
 <pre><code class="language-shell">kubectl apply -f https://raw.githubusercontent.com/googleforgames/quilkin/main/examples/agones-xonotic-xds/xds-control-plane.yaml
 </code></pre>
@@ -2356,21 +2367,7 @@ complexity of a full xDS management control plane via integrations with popular
 projects and common architecture patterns.</p>
 <p>To view all the providers and options for the <code>manage</code> subcommand, run:</p>
 <pre><code class="language-shell">$ quilkin manage --help
-Runs Quilkin as a xDS management server, using `provider` as a configuration source
-
-Usage: quilkin manage [OPTIONS] &lt;COMMAND&gt;
-
-Commands:
-  agones  Watches Agones' game server CRDs for `Allocated` game server endpoints, and for a `ConfigMap` that specifies the filter configuration
-  file    Watches for changes to the file located at `path`
-  help    Print this message or the help of the given subcommand(s)
-
-Options:
-  -r, --relay &lt;RELAY&gt;                One or more `quilkin relay` endpoints to push configuration changes to [env: QUILKIN_MANAGEMENT_SERVER=]
-  -p, --port &lt;PORT&gt;                  The TCP port to listen to, to serve discovery responses [env: QUILKIN_PORT=] [default: 7800]
-      --address-type &lt;ADDRESS_TYPE&gt;  If specified, filters the available gameserver addresses to the one that matches the specified type
-      --ip-kind &lt;IP_KIND&gt;            If specified, additionally filters the gameserver address by its ip kind [default: any] [possible values: v4, v6, any]
-  -h, --help                         Print help
+{{#include ../../../target/quilkin.manage.commands}}
 </code></pre>
 <h2 id="overview-1"><a class="header" href="#overview-1">Overview</a></h2>
 <p>In addition to static configuration provided upon startup, a Quiklin proxy's configuration can also be updated at
@@ -2394,100 +2391,12 @@ the Aggregated Discovery Service.</p>
 <h2 id="connecting-to-an-xds-management-server"><a class="header" href="#connecting-to-an-xds-management-server">Connecting to an xDS management server</a></h2>
 <p>Connecting a Quilkin proxy to an xDS management server can be implemented via providing one or more URLs to
 the <code>management_servers</code> <a href="services/../../api/quilkin/struct.Proxy.html#structfield.management_server">command line</a>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="xds-metrics"><a class="header" href="#xds-metrics">xDS Metrics</a></h1>
-<h2 id="proxy-mode"><a class="header" href="#proxy-mode">Proxy Mode</a></h2>
-<p>Quilkin exposes the following metrics around the management servers and its resources when running as a
-<a href="services/xds/../proxy.html">UDP Proxy</a>:</p>
-<ul>
-<li>
-<p><code>quilkin_xds_connected_state</code> (Gauge)</p>
-<p>A boolean that indicates whether or not the proxy is currently connected to a management server. A value <code>1</code> means that the proxy is connected while <code>0</code> means that it is not connected to any server at that point in time.</p>
-</li>
-<li>
-<p><code>quilkin_xds_update_attempt_total</code> (Counter)</p>
-<p>The total number of attempts made by a management server to configure the proxy. This is equivalent to the total number of configuration updates received by the proxy from a management server.</p>
-</li>
-<li>
-<p><code>quilkin_xds_update_success_total</code> (Counter)</p>
-<p>The total number of successful attempts made by a management server to configure the proxy. This is equivalent to the total number of configuration updates received by the proxy from a management server and was successfully applied by the proxy.</p>
-</li>
-<li>
-<p><code>quilkin_xds_update_failure_total</code> (Counter)</p>
-<p>The total number of unsuccessful attempts made by a management server to configure the proxy. This is equivalent to the total number of configuration updates received by the proxy from a management server and was rejected by the proxy (e.g due to a bad/inconsistent configuration).</p>
-</li>
-<li>
-<p><code>quilkin_xds_requests_total</code> (Counter)</p>
-<p>The total number of <a href="https://www.envoyproxy.io/docs/envoy/latest/api-v3/service/discovery/v3/discovery.proto.html#service-discovery-v3-discoveryrequest">DiscoveryRequest</a>s made by the proxy to management servers. This tracks messages flowing in the direction from the proxy to the management server.</p>
-</li>
-</ul>
-<h2 id="xds-provider-mode"><a class="header" href="#xds-provider-mode">xDS Provider Mode</a></h2>
-<p>The following metrics are exposed when Quilkin is running as an <a href="services/xds/../xds.html">xDS provider</a>.</p>
-<ul>
-<li>
-<p><code>quilkin_management_server_connected_proxies</code> (Gauge)</p>
-<p>The number of proxies currently connected to the server.</p>
-</li>
-<li>
-<p><code>quilkin_management_server_discovery_requests_total{request_type}</code> (Counter)</p>
-<p>The total number of xDS Discovery requests received across all proxies.</p>
-<ul>
-<li><code>request_type</code> = <code>type.googleapis.com/envoy.config.cluster.v3.Cluster</code> | <code>type.googleapis.com/envoy.config.endpoint.v3.ClusterLoadAssignment</code> | <code>type.googleapis.com/envoy.config.listener.v3.Listener</code>
-Type URL of the requested resource</li>
-</ul>
-</li>
-<li>
-<p><code>quilkin_management_server_discovery_responses_total</code> (Counter)</p>
-<p>The total number of xDS Discovery responses sent back across all proxies in response to Discovery Requests.
-Each Discovery response sent corresponds to a configuration update for some proxy.</p>
-<ul>
-<li><code>request_type</code> = <code>type.googleapis.com/envoy.config.cluster.v3.Cluster</code> | <code>type.googleapis.com/envoy.config.endpoint.v3.ClusterLoadAssignment</code> | <code>type.googleapis.com/envoy.config.listener.v3.Listener</code>
-Type URL of the requested resource</li>
-</ul>
-</li>
-<li>
-<p><code>quilkin_management_server_endpoints_total</code> (Gauge)</p>
-<p>The number of active endpoints discovered by the server. The number of active endpoints
-correlates with the size of the cluster configuration update sent to proxies.</p>
-</li>
-<li>
-<p><code>quilkin_management_server_snapshot_generation_errors_total</code> (Counter)</p>
-<p>The total number of errors encountered while generating a configuration snapshot update for a proxy.</p>
-</li>
-<li>
-<p><code>quilkin_management_server_snapshots_generated_total</code> (Counter)</p>
-<p>The total number of configuration snapshot generated across all proxies. A snapshot corresponds
-to a point in time view of a proxy's configuration. However it does not necessarily correspond
-to a proxy update - a proxy only gets the latest snapshot so it might miss intermediate
-snapshots if it lags behind.</p>
-</li>
-<li>
-<p><code>quilkin_management_server_snapshots_cache_size</code> (Gauge)</p>
-<p>The current number of snapshots in the in-memory snapshot cache. This corresponds 1-1 to
-proxies that connect to the server. However the number may be slightly higher than the number
-of connected proxies since snapshots for disconnected proxies are only periodically cleared
-from the cache.</p>
-</li>
-</ul>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="agones-xds-provider"><a class="header" href="#agones-xds-provider">Agones xDS Provider</a></h1>
-<p>The <a href="https://agones.dev">Agones</a> xDS Provider is built to simplify Quilkin integration with Agones
+<div style="break-before: page; page-break-before: always;"></div><h1 id="agones-provider"><a class="header" href="#agones-provider">Agones Provider</a></h1>
+<p>The <a href="https://agones.dev">Agones</a> Provider is built to simplify Quilkin integration with Agones
 game server hosting on top of <a href="https://kubernetes.io">Kubernetes</a>.</p>
 <p>This provider watches for changes in Agones
 <a href="https://agones.dev/site/docs/getting-started/create-gameserver/"><code>GameServer</code> resources</a> in a cluster, and
 utilises that information to provide <a href="services/xds/providers/../../proxy.html#endpoints">Endpoint</a> information to connected Quilkin proxies.</p>
-<p>To view all the options for the agones provider subcommand, run:</p>
-<pre><code class="language-shell">$ quilkin manage agones --help
-Watches Agones' game server CRDs for `Allocated` game server endpoints, and for a `ConfigMap` that specifies the filter configuration
-
-Usage: quilkin manage agones [OPTIONS]
-
-Options:
-  -c, --config-namespace &lt;CONFIG_NAMESPACE&gt;
-          The namespace under which the configmap is stored [env: QUILKIN_AGONES_CONFIG_NAMESPACE=]
-  -g, --gameservers-namespace &lt;GAMESERVERS_NAMESPACE&gt;
-          The namespace under which the game servers run [env: QUILKIN_AGONES_GAMESERVERS_NAMESPACE=] [default: default]
-  -h, --help
-          Print help
-</code></pre>
 <blockquote>
 <p>Currently, the Agones provider can only discover resources within the cluster it is running in.</p>
 </blockquote>
@@ -2538,34 +2447,17 @@ data:
 <p>By default the Agones xDS provider will look in the <code>default</code> namespace for this <code>ConfigMap</code>, but it can be
 configured via the <code>--config-namespace</code> argument.</p>
 <h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
-<p>As an example, the following runs the server with subcommnad <code>manage agones</code> against a cluster (using default
-kubeconfig authentication) where Quilkin pods run in the <code>quilkin</code> namespace and <code>GameServer</code> pods run in the
-<code>gameservers</code> namespace:</p>
-<pre><code class="language-sh">quilkin manage agones --config-namespace quilkin --gameservers-namespace gameservers
+<p>As an example, the following runs quilkin against a cluster (using default
+kubeconfig authentication) in the <code>default</code> namespace.</p>
+<pre><code class="language-sh">quilkin --provider.k8s.agones --provider.k8s.agones.namespace=default
 </code></pre>
 <p>For a full referenmce of deploying this provider in a Kubernetes cluster, with appropriate <a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/">Deployments</a>, <a href="https://kubernetes.io/docs/concepts/services-networking/service/">Services</a>,
 and <a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/">RBAC</a> Rules, there is an <a href="https://github.com/googleforgames/quilkin/tree/main/examples/agones-xonotic-xds">Agones, xDS and Xonotic example</a>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="filesystem-xds-provider"><a class="header" href="#filesystem-xds-provider">Filesystem xDS Provider</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="filesystem-provider"><a class="header" href="#filesystem-provider">Filesystem Provider</a></h1>
 <p>The filesystem provider watches a configuration file on disk and sends updates to proxies whenever that file changes.</p>
-<p>To view all the options for the file provider subcommand, run:</p>
-<pre><code class="language-shell">$ quilkin manage agones --help
-Watches for changes to the file located at `path`
-
-Usage: quilkin manage file &lt;PATH&gt;
-
-Arguments:
-  &lt;PATH&gt;  The path to the source config [env: QUILKIN_FS_PATH=]
-
-Options:
-  -h, --help  Print help
-</code></pre>
 <p>For example:</p>
-<pre><code class="language-sh">quilkin manage file quilkin.yaml
+<pre><code class="language-sh">quilkin --provider.fs.path quilkin.yaml
 </code></pre>
-<p>We run this on port 1800, in this example, in case you are running this locally, and the
-default port is taken up by an existing Quilkin proxy.</p>
-<p>After running this command, any proxy that connects to port 18000 will receive updates as configured in <code>config.yaml</code>
-file.</p>
 <p>You can find the configuration file schema in <a href="services/xds/providers/../../../services/proxy/configuration.html">Configuration File</a>.</p>
 <p>Example:</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -2729,7 +2621,8 @@ xDS server without the relay needing to maintain a list
 of xDS servers to connect to in the relay itself.</p>
 <div class="table-wrapper"><table><thead><tr><th>Method Name</th><th>Request Type</th><th>Response Type</th><th>Description</th></tr></thead><tbody>
 <tr><td>StreamAggregatedResources</td><td><a href="services/xds/proto/index.html#envoy-service-discovery-v3-DiscoveryResponse">.envoy.service.discovery.v3.DiscoveryResponse</a> stream</td><td><a href="services/xds/proto/index.html#envoy-service-discovery-v3-DiscoveryRequest">.envoy.service.discovery.v3.DiscoveryRequest</a> stream</td><td>This RPC is not supported but remains here as part of the xDS standard, as Quilkin only uses a delta configuration transport for performance reasons.</td></tr>
-<tr><td>DeltaAggregatedResources</td><td><a href="services/xds/proto/index.html#envoy-service-discovery-v3-DeltaDiscoveryResponse">.envoy.service.discovery.v3.DeltaDiscoveryResponse</a> stream</td><td><a href="services/xds/proto/index.html#envoy-service-discovery-v3-DeltaDiscoveryRequest">.envoy.service.discovery.v3.DeltaDiscoveryRequest</a> stream</td><td>Delta (Incremental) xDS implementation</td></tr>
+<tr><td>DeltaAggregatedResources</td><td><a href="services/xds/proto/index.html#envoy-service-discovery-v3-DeltaDiscoveryResponse">.envoy.service.discovery.v3.DeltaDiscoveryResponse</a> stream</td><td><a href="services/xds/proto/index.html#envoy-service-discovery-v3-DeltaDiscoveryRequest">.envoy.service.discovery.v3.DeltaDiscoveryRequest</a> stream</td><td>Delta (Incremental) xDS implementation, used by agents and/or management servers to update the relay with their configuration</td></tr>
+<tr><td>SubscribeDeltaResources</td><td><a href="services/xds/proto/index.html#envoy-service-discovery-v3-DeltaDiscoveryRequest">.envoy.service.discovery.v3.DeltaDiscoveryRequest</a> stream</td><td><a href="services/xds/proto/index.html#envoy-service-discovery-v3-DeltaDiscoveryResponse">.envoy.service.discovery.v3.DeltaDiscoveryResponse</a> stream</td><td>Used by proxies to subscribe to changes from the relay</td></tr>
 </tbody></table>
 </div>
 <p><a name="quilkin_config_v1alpha1_config-proto"></a></p>
@@ -3025,24 +2918,7 @@ relay's ADS endpoint, you use the same <code>--management-server</code> argument
 connecting to control planes.</p>
 <p>To view all options for the <code>relay</code> subcommand, run:</p>
 <pre><code class="language-shell">$ quilkin relay --help
-Runs Quilkin as a relay service that runs a Manager Discovery Service (mDS) for accepting cluster and configuration information from xDS management services, and exposing it as a single merged xDS service for proxy services
-
-Usage: quilkin relay [OPTIONS] [COMMAND]
-
-Commands:
-  agones  Watches Agones' game server CRDs for `Allocated` game server endpoints, and for a `ConfigMap` that specifies the filter configuration
-  file    Watches for changes to the file located at `path`
-  help    Print this message or the help of the given subcommand(s)
-
-Options:
-  -m, --mds-port &lt;MDS_PORT&gt;
-          Port for mDS service [env: QUILKIN_MDS_PORT=] [default: 7900]
-  -x, --xds-port &lt;XDS_PORT&gt;
-          Port for xDS management server service [env: QUILKIN_PORT=] [default: 7800]
-      --idle-request-interval-secs &lt;IDLE_REQUEST_INTERVAL_SECS&gt;
-          The interval in seconds at which the relay will send a discovery request to an management server after receiving no updates [env: QUILKIN_IDLE_REQUEST_INTERVAL_SECS=]
-  -h, --help
-          Print help
+{{#include ../../../target/quilkin.relay.commands}}
 </code></pre>
 <blockquote>
 <p>Each sub-control planes (<code>file</code>, <code>agones</code>, etc) matches the <code>quilkin manage</code> providers capabilities.
@@ -3061,18 +2937,17 @@ clusters:
     - address: 127.0.0.1:8888
 </code></pre>
 <p>To start the relay, run the <code>relay</code> command:</p>
-<pre><code>quilkin relay 
+<pre><code>quilkin --service.mds
 </code></pre>
 <p>To spawn the control plane and have the control plane send its configuration,
-we need to run the <code>manage</code> command with the <code>--relay</code> flag with the address
+we need to run quilkin with the <code>provider.mds.endpoints</code> flag with the address
 of the relay of the relay server we just spawned which is at port <code>7900</code> by
-default. We're also going to set <code>--admin-address</code> and <code>--port</code> flags to avoid
-port collision with the relay's admin and xds endpoints.</p>
-<pre><code>quilkin --admin-address http://localhost:8001 \
-    manage \
-    --port 7801 \
-    --relay http://localhost:7900 \
-    file quilkin.yaml
+default. We're also going to set <code>admin.address</code> to a different port to not
+conflict.</p>
+<pre><code>quilkin \
+    --admin.address http://localhost:8001 \
+    --provider.fs.path quilkin.yaml \
+    --provider.mds.endpoints http://localhost:7900 \
 </code></pre>
 <p>Now if we run cURL on both the relay and the control plane we should see that
 they both contain the same set of endpoints.</p>
@@ -3083,10 +2958,9 @@ curl localhost:8000/config
 </code></pre>
 <p>Since the relay service also exposes a aDS control plane endpoint, that
 represents the merged set of all sources, to connect this to the proxy all we
-have to do is use the same <code>--management-server</code> flag that we use to specify
-the location of control planes, then the proxies will be able to pull
-configuration from the relay.</p>
-<pre><code>quilkin --admin-address http://localhost:8002 proxy --management-server http://127.0.0.1:7800
+have to do is use <code>provider.xds.endpoints</code> to specify the location of control
+planes, then the proxies will be able to pull configuration from the relay.</p>
+<pre><code>quilkin --service.udp --admin.address http://localhost:8002 --provider.xds.endpoints http://127.0.0.1:7800
 </code></pre>
 <p>We can also additionally add a second control plane source to the relay, which
 will be merged with our control plane's configuration to create a singular
@@ -3097,11 +2971,10 @@ clusters:
   - endpoints:
     - address: 127.0.0.1:9999
 </code></pre>
-<pre><code>quilkin --admin-address http://localhost:8003 \
-    manage \
-    --port 7802 \
-    --relay http://localhost:7900 \
-    file quilkin.yaml
+<pre><code>quilkin \
+    --admin.address http://localhost:8003 \
+    --provider.fs.path quilkin2.yaml \
+    --provider.mds.endpoints http://localhost:7900 \
 </code></pre>
 <p>And that's it! We've just setup control planes to look for configuration changes
 in our system, a relay to merge any changes into a unified dataset, and set up
@@ -3118,22 +2991,7 @@ configuration information to a <code>relay</code> service.</p>
 <a href="services/./xds/providers/filesystem.html">Filesystem</a> and <a href="services/./xds/providers/agones.html">Agones</a>.</p>
 <p>To view all options for the <code>agent</code> subcommand, run:</p>
 <pre><code class="language-shell">$ quilkin agent --help
-Runs Quilkin as a relay service that runs a Manager Discovery Service (mDS) for accepting cluster and configuration information from xDS management services, and exposing it as a single merged xDS service for proxy services
-
-Usage: quilkin agent [OPTIONS] [COMMAND]
-
-Commands:
-  agones  Watches Agones' game server CRDs for `Allocated` game server endpoints, and for a `ConfigMap` that specifies the filter configuration
-  file    Watches for changes to the file located at `path`
-  help    Print this message or the help of the given subcommand(s)
-
-Options:
-  -q, --qcmp-port &lt;QCMP_PORT&gt;        Port for QCMP service [env: QCMP_PORT=] [default: 7600]
-  -r, --relay &lt;RELAY&gt;                One or more `quilkin relay` endpoints to push configuration changes to [env: QUILKIN_MANAGEMENT_SERVER=]
-      --address-type &lt;ADDRESS_TYPE&gt;  If specified, filters the available gameserver addresses to the one that matches the specified type
-      --ip-kind &lt;IP_KIND&gt;            If specified, additionally filters the gameserver address by its ip kind [possible values: v4, v6, any]
-  -i, --icao-code &lt;ICAO_CODE&gt;        The ICAO code for the agent [env: ICAO_CODE=] [default: XXXX]
-  -h, --help                         Print help
+{{#include ../../../target/quilkin.agent.commands}}
 </code></pre>
 <h2 id="quickstart-1"><a class="header" href="#quickstart-1">Quickstart</a></h2>
 <p>The simplest version of the <code>agent</code> service is just running <code>quilkin agent</code>,
@@ -3242,11 +3100,11 @@ check period (e.g.  <code>periodSeconds=1</code>) and a low success threshold
 (e.g. <code>successThreshold=1</code>), but a high <code>failureThreshold</code>
 (e.g. <code>failureThreshold=60</code>) and <code>terminationGracePeriodSeconds</code> to allow for
 backoff attempts and existing player sessions to continue without disruption.</p>
-<h4 id="proxy-mode-1"><a class="header" href="#proxy-mode-1">Proxy Mode</a></h4>
+<h4 id="proxy-mode"><a class="header" href="#proxy-mode">Proxy Mode</a></h4>
 <p>Will return an HTTP status of 200 when there is at least one endpoint to send data to. This is primarily to ensure
 that new proxies that have yet to get configuration information from an <a href="deployment/../services/xds.html">xDS server</a> aren't send data
 until they are fully populated.</p>
-<h4 id="xds-provider-mode-1"><a class="header" href="#xds-provider-mode-1">xDS Provider Mode</a></h4>
+<h4 id="xds-provider-mode"><a class="header" href="#xds-provider-mode">xDS Provider Mode</a></h4>
 <p>Will return an HTTP status of 200 when all health checks pass.</p>
 <h3 id="metrics-4"><a class="header" href="#metrics-4">/metrics</a></h3>
 <p>Outputs <a href="https://prometheus.io/">Prometheus</a> formatted metrics for this instance.</p>

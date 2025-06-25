@@ -487,7 +487,7 @@
     /// if present.
     </span><span class="kw">pub fn </span>to_socket_addr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; std::io::Result&lt;SocketAddr&gt; {
         <span class="kw">static </span>DNS: Lazy&lt;TokioResolver&gt; =
-            Lazy::new(|| TokioResolver::tokio_from_system_conf().unwrap());
+            Lazy::new(|| TokioResolver::builder_tokio().unwrap().build());
 
         <span class="kw">let </span>ip = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.host {
             AddressKind::Ip(ip) =&gt; <span class="kw-2">*</span>ip,

@@ -251,7 +251,14 @@
 <a href="#250" id="250">250</a>
 <a href="#251" id="251">251</a>
 <a href="#252" id="252">252</a>
-<a href="#253" id="253">253</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2022 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -294,7 +301,7 @@
     <span class="kw">use </span>tokio::time::timeout;
 
     <span class="kw">use </span>quilkin::{
-        config::providers::k8s::agones::{Fleet, GameServer},
+        providers::k8s::agones::{Fleet, GameServer},
         test::TestHelper,
     };
 
@@ -434,11 +441,13 @@
 
         <span class="comment">// Setup the xDS Agones provider server
         </span><span class="kw">let </span>args = [
-            <span class="string">"manage"</span>,
-            <span class="string">"agones"</span>,
-            <span class="string">"--config-namespace"</span>,
+            <span class="string">"--service.xds"</span>,
+            <span class="string">"--service.mds"</span>,
+            <span class="string">"--provider.k8s"</span>,
+            <span class="string">"--provider.k8s.namespace"</span>,
             client.namespace.as_str(),
-            <span class="string">"--gameservers-namespace"</span>,
+            <span class="string">"--provider.k8s.agones"</span>,
+            <span class="string">"--provider.k8s.agones.namespace"</span>,
             client.namespace.as_str(),
         ]
         .map(String::from)
@@ -495,13 +504,18 @@
 
         <span class="comment">// make sure the deployment and service are ready
         </span><span class="kw">let </span>name = deployment.name_unchecked();
-        timeout(
+        <span class="kw">let </span>result = timeout(
             Duration::from_secs(<span class="number">30</span>),
             await_condition(deployments.clone(), name.as_str(), is_deployment_ready()),
         )
-        .<span class="kw">await
-        </span>.expect(<span class="string">"xDS provider deployment should be ready"</span>)
-        .unwrap();
+        .<span class="kw">await</span>;
+
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(result) = result {
+            result.unwrap();
+        } <span class="kw">else </span>{
+            debug_pods(client, <span class="string">"role=xds"</span>.into()).<span class="kw">await</span>;
+            <span class="macro">panic!</span>(<span class="string">"xDS provider deployment should be ready"</span>);
+        }
     }
 }
 </code></pre></div></section></main></body></html>

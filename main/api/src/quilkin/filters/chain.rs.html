@@ -496,10 +496,7 @@
 <a href="#495" id="495">495</a>
 <a href="#496" id="496">496</a>
 <a href="#497" id="497">497</a>
-<a href="#498" id="498">498</a>
-<a href="#499" id="499">499</a>
-<a href="#500" id="500">500</a>
-<a href="#501" id="501">501</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#498" id="498">498</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -518,7 +515,7 @@
 </span><span class="kw">use </span>prometheus::{Histogram, exponential_buckets};
 
 <span class="kw">use crate</span>::{
-    config::Filter <span class="kw">as </span>FilterConfig,
+    config::filter::Filter <span class="kw">as </span>FilterConfig,
     filters::{FilterRegistry, prelude::<span class="kw-2">*</span>},
     metrics::{CollectorExt, histogram_opts},
 };
@@ -607,17 +604,15 @@
         <span class="self">self</span>.filters.is_empty()
     }
 
-    <span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw">crate</span>::config::Filter&gt; + <span class="lifetime">'_ </span>{
-        <span class="self">self</span>.filters
-            .iter()
-            .map(|(name, instance)| <span class="kw">crate</span>::config::Filter {
-                name: name.clone(),
-                label: instance.label().map(String::from),
-                config: <span class="kw">match </span>instance.config() {
-                    serde_json::Value::Null =&gt; <span class="prelude-val">None</span>,
-                    value =&gt; <span class="prelude-val">Some</span>(value.clone()),
-                },
-            })
+    <span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = FilterConfig&gt; + <span class="lifetime">'_ </span>{
+        <span class="self">self</span>.filters.iter().map(|(name, instance)| FilterConfig {
+            name: name.clone(),
+            label: instance.label().map(String::from),
+            config: <span class="kw">match </span>instance.config() {
+                serde_json::Value::Null =&gt; <span class="prelude-val">None</span>,
+                value =&gt; <span class="prelude-val">Some</span>(value.clone()),
+            },
+        })
     }
 
     <span class="doccomment">/// Validates the filter configurations in the provided config and constructs
@@ -754,7 +749,7 @@
         <span class="kw">let </span>filters = <span class="self">self
             </span>.filters
             .iter()
-            .map(|(name, instance)| <span class="kw">crate</span>::config::Filter {
+            .map(|(name, instance)| FilterConfig {
                 name: name.clone(),
                 label: instance.label().map(String::from),
                 config: <span class="prelude-val">Some</span>(serde_json::Value::clone(instance.config())),
@@ -836,7 +831,6 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use crate</span>::{
-        config,
         filters::Debug,
         net::endpoint::Endpoint,
         test::{TestConfig, TestFilter, alloc_buffer},
@@ -849,7 +843,7 @@
         <span class="kw">let </span>provider = Debug::factory();
 
         <span class="comment">// everything is fine
-        </span><span class="kw">let </span>filter_configs = [config::Filter {
+        </span><span class="kw">let </span>filter_configs = [FilterConfig {
             name: provider.name().into(),
             label: <span class="prelude-val">None</span>,
             config: <span class="prelude-val">Some</span>(serde_json::Map::default().into()),
@@ -859,7 +853,7 @@
         <span class="macro">assert_eq!</span>(<span class="number">1</span>, chain.filters.len());
 
         <span class="comment">// uh oh, something went wrong
-        </span><span class="kw">let </span>filter_configs = [config::Filter {
+        </span><span class="kw">let </span>filter_configs = [FilterConfig {
             name: <span class="string">"this is so wrong"</span>.into(),
             label: <span class="prelude-val">None</span>,
             config: Default::default(),
@@ -991,7 +985,7 @@
 
         <span class="kw">let </span>configs = filter_chain.iter().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="macro">assert_eq!</span>(
-            <span class="macro">vec!</span>[<span class="kw">crate</span>::config::Filter {
+            <span class="macro">vec!</span>[FilterConfig {
                 name: <span class="string">"TestFilter"</span>.into(),
                 label: <span class="prelude-val">None</span>,
                 config: <span class="prelude-val">None</span>,

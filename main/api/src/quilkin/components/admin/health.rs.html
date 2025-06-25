@@ -81,8 +81,7 @@
 <a href="#80" id="80">80</a>
 <a href="#81" id="81">81</a>
 <a href="#82" id="82">82</a>
-<a href="#83" id="83">83</a>
-<a href="#84" id="84">84</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#83" id="83">83</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -124,7 +123,7 @@
         panic::set_hook(Box::new(<span class="kw">move </span>|panic_info| {
             <span class="macro">tracing::error!</span>(%panic_info, <span class="string">"Panic has occurred. Moving to Unhealthy"</span>);
             healthy.swap(<span class="bool-val">false</span>, Relaxed);
-            <span class="kw">let _ </span>= shutdown_tx.send(<span class="kw">crate</span>::signal::ShutdownKind::Normal);
+            <span class="kw">let _ </span>= shutdown_tx.send(());
             default_hook(panic_info);
         }));
 
@@ -151,8 +150,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>panic_hook() {
-        <span class="kw">let </span>(shutdown_tx, _shutdown_rx) =
-            <span class="kw">crate</span>::signal::channel(<span class="kw">crate</span>::signal::ShutdownKind::Testing);
+        <span class="kw">let </span>(shutdown_tx, _shutdown_rx) = <span class="kw">crate</span>::signal::channel();
         <span class="kw">let </span>health = Health::new(shutdown_tx);
 
         <span class="kw">let </span>response = health.check_liveness();

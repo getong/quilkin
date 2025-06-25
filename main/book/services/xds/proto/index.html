@@ -41,6 +41,17 @@
         <script src="../../../toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
@@ -118,7 +129,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -297,7 +308,8 @@ xDS server without the relay needing to maintain a list
 of xDS servers to connect to in the relay itself.</p>
 <div class="table-wrapper"><table><thead><tr><th>Method Name</th><th>Request Type</th><th>Response Type</th><th>Description</th></tr></thead><tbody>
 <tr><td>StreamAggregatedResources</td><td><a href="#envoy-service-discovery-v3-DiscoveryResponse">.envoy.service.discovery.v3.DiscoveryResponse</a> stream</td><td><a href="#envoy-service-discovery-v3-DiscoveryRequest">.envoy.service.discovery.v3.DiscoveryRequest</a> stream</td><td>This RPC is not supported but remains here as part of the xDS standard, as Quilkin only uses a delta configuration transport for performance reasons.</td></tr>
-<tr><td>DeltaAggregatedResources</td><td><a href="#envoy-service-discovery-v3-DeltaDiscoveryResponse">.envoy.service.discovery.v3.DeltaDiscoveryResponse</a> stream</td><td><a href="#envoy-service-discovery-v3-DeltaDiscoveryRequest">.envoy.service.discovery.v3.DeltaDiscoveryRequest</a> stream</td><td>Delta (Incremental) xDS implementation</td></tr>
+<tr><td>DeltaAggregatedResources</td><td><a href="#envoy-service-discovery-v3-DeltaDiscoveryResponse">.envoy.service.discovery.v3.DeltaDiscoveryResponse</a> stream</td><td><a href="#envoy-service-discovery-v3-DeltaDiscoveryRequest">.envoy.service.discovery.v3.DeltaDiscoveryRequest</a> stream</td><td>Delta (Incremental) xDS implementation, used by agents and/or management servers to update the relay with their configuration</td></tr>
+<tr><td>SubscribeDeltaResources</td><td><a href="#envoy-service-discovery-v3-DeltaDiscoveryRequest">.envoy.service.discovery.v3.DeltaDiscoveryRequest</a> stream</td><td><a href="#envoy-service-discovery-v3-DeltaDiscoveryResponse">.envoy.service.discovery.v3.DeltaDiscoveryResponse</a> stream</td><td>Used by proxies to subscribe to changes from the relay</td></tr>
 </tbody></table>
 </div>
 <p><a name="quilkin_config_v1alpha1_config-proto"></a></p>

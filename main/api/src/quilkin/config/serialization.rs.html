@@ -333,60 +333,11 @@
 <a href="#332" id="332">332</a>
 <a href="#333" id="333">333</a>
 <a href="#334" id="334">334</a>
-<a href="#335" id="335">335</a>
-<a href="#336" id="336">336</a>
-<a href="#337" id="337">337</a></pre></div><pre class="rust"><code><span class="kw">use </span>serde::ser::SerializeMap;
+<a href="#335" id="335">335</a></pre></div><pre class="rust"><code><span class="kw">use </span>serde::ser::SerializeMap;
 
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
 <span class="kw">impl </span>Config {
-    <span class="doccomment">/// Attempts to deserialize `input` as a YAML object representing `Self`.
-    </span><span class="kw">pub fn </span>from_reader&lt;R: std::io::Read&gt;(input: R, is_agent: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, eyre::Error&gt; {
-        <span class="attr">#[derive(Deserialize)]
-        #[serde(deny_unknown_fields)]
-        </span><span class="kw">struct </span>AllConfig {
-            id: <span class="prelude-ty">Option</span>&lt;String&gt;,
-            version: <span class="prelude-ty">Option</span>&lt;Version&gt;,
-            filters: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::filters::FilterChain&gt;,
-            clusters: <span class="prelude-ty">Option</span>&lt;ClusterMap&gt;,
-            datacenters: <span class="prelude-ty">Option</span>&lt;DatacenterMap&gt;,
-            icao_code: <span class="prelude-ty">Option</span>&lt;IcaoCode&gt;,
-            qcmp_port: <span class="prelude-ty">Option</span>&lt;u16&gt;,
-        }
-
-        <span class="kw">let </span>cfg: AllConfig = serde_yaml::from_reader(input)<span class="question-mark">?</span>;
-
-        <span class="kw">if </span>cfg.datacenters.is_some() &amp;&amp; (cfg.icao_code.is_some() || cfg.qcmp_port.is_some()) {
-            <span class="macro">eyre::bail!</span>(<span class="string">"`datacenters` and `icao_code` or `qcmp_port` were present"</span>);
-        } <span class="kw">else if </span>is_agent &amp;&amp; cfg.datacenters.is_some() {
-            <span class="macro">eyre::bail!</span>(<span class="string">"`datacenters` was set even though this is an agent"</span>);
-        }
-
-        <span class="kw">let </span><span class="kw-2">mut </span>typemap = default_typemap();
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(filters) = cfg.filters {
-            typemap.insert::&lt;FilterChain&gt;(Slot::new(filters));
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(clusters) = cfg.clusters {
-            typemap.insert::&lt;ClusterMap&gt;(Watch::new(clusters));
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(datacenters) = cfg.datacenters {
-            typemap.insert::&lt;DatacenterMap&gt;(Watch::new(datacenters));
-        } <span class="kw">else </span>{
-            typemap.insert::&lt;Agent&gt;(Agent {
-                icao_code: Slot::new(cfg.icao_code),
-                qcmp_port: Slot::new(cfg.qcmp_port),
-            });
-        }
-
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            dyn_cfg: DynamicConfig {
-                id: cfg.id.map_or_else(default_id, Slot::from),
-                version: cfg.version.unwrap_or_default(),
-                typemap,
-            },
-        })
-    }
-
     <span class="kw">pub fn </span>update_from_json(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         map: serde_json::Map&lt;String, serde_json::Value&gt;,
@@ -396,14 +347,14 @@
             <span class="kw">match </span>k.as_str() {
                 <span class="string">"filters" </span>=&gt; {
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(filters) = <span class="self">self</span>.dyn_cfg.filters() {
-                        filters.try_replace(serde_json::from_value(v)<span class="question-mark">?</span>);
+                        filters.store(serde_json::from_value(v)<span class="question-mark">?</span>);
+                    } <span class="kw">else </span>{
+                        <span class="macro">tracing::trace!</span>(<span class="string">"ignoring FilterChain as it was not in the typemap"</span>);
                     }
-                }
-                <span class="string">"id" </span>=&gt; {
-                    <span class="self">self</span>.dyn_cfg.id.try_replace(serde_json::from_value(v)<span class="question-mark">?</span>);
                 }
                 <span class="string">"clusters" </span>=&gt; {
                     <span class="kw">let </span><span class="prelude-val">Some</span>(clusters) = <span class="self">self</span>.dyn_cfg.clusters() <span class="kw">else </span>{
+                        <span class="macro">tracing::trace!</span>(<span class="string">"ignoring ClusterMap as it was not in the typemap"</span>);
                         <span class="kw">continue</span>;
                     };
 
@@ -420,11 +371,28 @@
                     });
                     <span class="self">self</span>.apply_metrics();
                 }
-                <span class="comment">// Updating the version doesn't make sense at runtime, but we don't
-                // want to to trace out
-                </span><span class="string">"version" </span>=&gt; {}
+                <span class="string">"version" </span>| <span class="string">"datacenters" </span>=&gt; {
+                    <span class="comment">// Updating the version doesn't make sense at runtime, and we don't
+                    // want to error out
+
+                    // datacenters are only a resource applied from remotes, not
+                    // local config files
+                </span>}
+                <span class="string">"id" </span>=&gt; {
+                    <span class="kw-2">*</span><span class="self">self</span>.dyn_cfg.id.lock() = serde_json::from_value(v)<span class="question-mark">?</span>;
+                }
+                <span class="string">"icao_code" </span>=&gt; {
+                    <span class="self">self</span>.dyn_cfg.icao_code.store(serde_json::from_value(v)<span class="question-mark">?</span>);
+                }
+                <span class="string">"qcmp_port" </span>=&gt; {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(qp) = <span class="self">self</span>.dyn_cfg.qcmp_port() {
+                        qp.store(serde_json::from_value(v)<span class="question-mark">?</span>);
+                    } <span class="kw">else </span>{
+                        <span class="macro">tracing::trace!</span>(<span class="string">"ignoring QcmpPort as it was not in the typemap"</span>);
+                    }
+                }
                 field =&gt; {
-                    <span class="macro">tracing::debug!</span>(field, <span class="string">"unable to replace invalid field"</span>);
+                    <span class="macro">eyre::bail!</span>(<span class="string">"unknown field '{field}'"</span>);
                 }
             }
         }
@@ -441,19 +409,19 @@
         <span class="kw">let </span><span class="kw-2">mut </span>map = serializer.serialize_map(<span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
         map.serialize_entry(<span class="string">"version"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.dyn_cfg.version)<span class="question-mark">?</span>;
-        map.serialize_entry(<span class="string">"id"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.dyn_cfg.id)<span class="question-mark">?</span>;
+        map.serialize_entry(<span class="string">"id"</span>, <span class="self">self</span>.dyn_cfg.id.lock().as_str())<span class="question-mark">?</span>;
+        map.serialize_entry(<span class="string">"icao_code"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.dyn_cfg.icao_code.load())<span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(qcmp) = <span class="self">self</span>.dyn_cfg.qcmp_port() {
+            map.serialize_entry(<span class="string">"qcmp_port"</span>, <span class="kw-2">&amp;</span>qcmp.load())<span class="question-mark">?</span>;
+        }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(filters) = <span class="self">self</span>.dyn_cfg.filters() {
-            map.serialize_entry(<span class="string">"filters"</span>, filters)<span class="question-mark">?</span>;
+            map.serialize_entry(<span class="string">"filters"</span>, <span class="kw-2">&amp;*</span>filters.load())<span class="question-mark">?</span>;
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(clusters) = <span class="self">self</span>.dyn_cfg.clusters() {
             map.serialize_entry(<span class="string">"clusters"</span>, clusters)<span class="question-mark">?</span>;
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(datacenters) = <span class="self">self</span>.dyn_cfg.datacenters() {
             map.serialize_entry(<span class="string">"datacenters"</span>, datacenters)<span class="question-mark">?</span>;
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(agent) = <span class="self">self</span>.dyn_cfg.agent() {
-            map.serialize_entry(<span class="string">"icao_code"</span>, <span class="kw-2">&amp;</span>agent.icao_code)<span class="question-mark">?</span>;
-            map.serialize_entry(<span class="string">"qcmp_port"</span>, <span class="kw-2">&amp;</span>agent.qcmp_port)<span class="question-mark">?</span>;
         }
 
         map.end()
@@ -470,7 +438,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>deserialise_client() {
-        <span class="kw">let </span>config = Config::default_non_agent();
+        <span class="kw">let </span>config = Config::default();
         config.dyn_cfg.clusters().unwrap().modify(|clusters| {
             clusters.insert_default([Endpoint::new(<span class="string">"127.0.0.1:25999"</span>.parse().unwrap())].into());
         });
@@ -480,7 +448,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>deserialise_server() {
-        <span class="kw">let </span>config = Config::default_non_agent();
+        <span class="kw">let </span>config = Config::default();
         config.dyn_cfg.clusters().unwrap().modify(|clusters| {
             clusters.insert_default(
                 [
@@ -496,26 +464,40 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>parse_default_values() {
-        <span class="kw">let </span>config: Config = serde_json::from_value(<span class="macro">json!</span>({
-            <span class="string">"version"</span>: <span class="string">"v1alpha1"</span>,
-             <span class="string">"clusters"</span>:[]
-        }))
-        .unwrap();
+        <span class="kw">let </span>config = Config::default();
+        <span class="kw">let </span>before = config.id();
+        <span class="macro">assert!</span>(!before.is_empty());
+        config
+            .update_from_json(
+                serde_json::from_value(<span class="macro">json!</span>({
+                    <span class="string">"version"</span>: <span class="string">"v1alpha1"</span>,
+                     <span class="string">"clusters"</span>:[]
+                }))
+                .unwrap(),
+                <span class="prelude-val">None</span>,
+            )
+            .unwrap();
 
-        <span class="macro">assert!</span>(!config.id().is_empty());
+        <span class="macro">assert_eq!</span>(before, config.id());
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>parse_client() {
-        <span class="kw">let </span>config: Config = serde_json::from_value(<span class="macro">json!</span>({
-            <span class="string">"version"</span>: <span class="string">"v1alpha1"</span>,
-            <span class="string">"clusters"</span>: [{
-                <span class="string">"endpoints"</span>: [{
-                    <span class="string">"address"</span>: <span class="string">"127.0.0.1:25999"
-                </span>}],
-            }]
-        }))
-        .unwrap();
+        <span class="kw">let </span>config = Config::default();
+        config
+            .update_from_json(
+                serde_json::from_value(<span class="macro">json!</span>({
+                    <span class="string">"version"</span>: <span class="string">"v1alpha1"</span>,
+                    <span class="string">"clusters"</span>: [{
+                        <span class="string">"endpoints"</span>: [{
+                            <span class="string">"address"</span>: <span class="string">"127.0.0.1:25999"
+                        </span>}],
+                    }]
+                }))
+                .unwrap(),
+                <span class="prelude-val">None</span>,
+            )
+            .unwrap();
 
         <span class="kw">let </span>value = config.dyn_cfg.clusters().unwrap().read();
         <span class="macro">assert_eq!</span>(
@@ -528,15 +510,21 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>parse_ipv6_endpoint() {
-        <span class="kw">let </span>config: Config = serde_json::from_value(<span class="macro">json!</span>({
-            <span class="string">"version"</span>: <span class="string">"v1alpha1"</span>,
-            <span class="string">"clusters"</span>:[{
-                <span class="string">"endpoints"</span>: [{
-                    <span class="string">"address"</span>: <span class="string">"[2345:0425:2CA1:0000:0000:0567:5673:24b5]:25999"
-                </span>}],
-            }]
-        }))
-        .unwrap();
+        <span class="kw">let </span>config = Config::default();
+        config
+            .update_from_json(
+                serde_json::from_value(<span class="macro">json!</span>({
+                    <span class="string">"version"</span>: <span class="string">"v1alpha1"</span>,
+                    <span class="string">"clusters"</span>:[{
+                        <span class="string">"endpoints"</span>: [{
+                            <span class="string">"address"</span>: <span class="string">"[2345:0425:2CA1:0000:0000:0567:5673:24b5]:25999"
+                        </span>}],
+                    }]
+                }))
+                .unwrap(),
+                <span class="prelude-val">None</span>,
+            )
+            .unwrap();
 
         <span class="kw">let </span>value = config.dyn_cfg.clusters().unwrap().read();
         <span class="macro">assert_eq!</span>(
@@ -558,30 +546,36 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>parse_server() {
-        <span class="kw">let </span>config: Config = serde_json::from_value(<span class="macro">json!</span>({
-            <span class="string">"version"</span>: <span class="string">"v1alpha1"</span>,
-            <span class="string">"clusters"</span>: [{
-                <span class="string">"endpoints"</span>: [
-                    {
-                        <span class="string">"address" </span>: <span class="string">"127.0.0.1:26000"</span>,
-                        <span class="string">"metadata"</span>: {
-                            <span class="string">"quilkin.dev"</span>: {
-                                <span class="string">"tokens"</span>: [<span class="string">"MXg3aWp5Ng=="</span>, <span class="string">"OGdqM3YyaQ=="</span>],
+        <span class="kw">let </span>config = Config::default();
+        config
+            .update_from_json(
+                serde_json::from_value(<span class="macro">json!</span>({
+                    <span class="string">"version"</span>: <span class="string">"v1alpha1"</span>,
+                    <span class="string">"clusters"</span>: [{
+                        <span class="string">"endpoints"</span>: [
+                            {
+                                <span class="string">"address" </span>: <span class="string">"127.0.0.1:26000"</span>,
+                                <span class="string">"metadata"</span>: {
+                                    <span class="string">"quilkin.dev"</span>: {
+                                        <span class="string">"tokens"</span>: [<span class="string">"MXg3aWp5Ng=="</span>, <span class="string">"OGdqM3YyaQ=="</span>],
+                                    }
+                                }
+                            },
+                            {
+                                <span class="string">"address" </span>: <span class="string">"[2345:0425:2CA1:0000:0000:0567:5673:24b5]:25999"</span>,
+                                <span class="string">"metadata"</span>: {
+                                    <span class="string">"quilkin.dev"</span>: {
+                                        <span class="string">"tokens"</span>: [<span class="string">"bmt1eTcweA=="</span>],
+                                    }
+                                }
                             }
-                        }
-                    },
-                    {
-                        <span class="string">"address" </span>: <span class="string">"[2345:0425:2CA1:0000:0000:0567:5673:24b5]:25999"</span>,
-                        <span class="string">"metadata"</span>: {
-                            <span class="string">"quilkin.dev"</span>: {
-                                <span class="string">"tokens"</span>: [<span class="string">"bmt1eTcweA=="</span>],
-                            }
-                        }
-                    }
-                ],
-            }]
-        }))
-        .unwrap_or_else(|<span class="kw">_</span>| Config::default_agent());
+                        ],
+                    }]
+                }))
+                .unwrap(),
+                <span class="prelude-val">None</span>,
+            )
+            .unwrap();
 
         <span class="kw">let </span>value = config.dyn_cfg.clusters().unwrap().read();
         <span class="macro">assert_eq!</span>(
@@ -664,8 +658,10 @@ dynamic:
 "</span>,
         ];
 
-        <span class="kw">for </span>config <span class="kw">in </span>configs {
-            <span class="kw">let </span>result = Config::from_reader(config.as_bytes(), <span class="bool-val">false</span>);
+        <span class="kw">let </span>config = Config::default();
+        <span class="kw">for </span>cstr <span class="kw">in </span>configs {
+            <span class="kw">let </span>json = serde_yaml::from_str(cstr).unwrap();
+            <span class="kw">let </span>result = config.update_from_json(json, <span class="prelude-val">None</span>);
             <span class="kw">let </span>error = result.unwrap_err();
             <span class="macro">println!</span>(<span class="string">"here: {}"</span>, error);
             <span class="macro">assert!</span>(<span class="macro">format!</span>(<span class="string">"{error:?}"</span>).contains(<span class="string">"unknown field"</span>));

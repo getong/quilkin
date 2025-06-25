@@ -545,8 +545,7 @@
 <a href="#544" id="544">544</a>
 <a href="#545" id="545">545</a>
 <a href="#546" id="546">546</a>
-<a href="#547" id="547">547</a>
-<a href="#548" id="548">548</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#547" id="547">547</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -576,7 +575,7 @@
     net::DualStackEpollSocket <span class="kw">as </span>DualStackLocalSocket,
     net::endpoint::metadata::Value,
     net::endpoint::{Endpoint, EndpointAddress},
-    signal::{ShutdownKind, ShutdownRx, ShutdownTx},
+    signal::{ShutdownRx, ShutdownTx},
 };
 
 <span class="kw">static </span>LOG_ONCE: Once = Once::new();
@@ -711,7 +710,7 @@
             .filter_map(|tx| tx.take())
         {
             shutdown_tx
-                .send(ShutdownKind::Testing)
+                .send(())
                 .map_err(|error| {
                     <span class="macro">tracing::warn!</span>(
                         %error,
@@ -722,7 +721,7 @@
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>((shutdown_tx, <span class="kw">_</span>)) = <span class="self">self</span>.shutdown_ch.take() {
-            shutdown_tx.send(ShutdownKind::Testing).unwrap();
+            shutdown_tx.send(()).unwrap();
         }
     }
 }
@@ -846,13 +845,12 @@
         server: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::components::proxy::Proxy&gt;,
         with_admin: <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Option</span>&lt;SocketAddr&gt;&gt;,
     ) -&gt; u16 {
-        <span class="kw">let </span>(shutdown_tx, shutdown_rx) =
-            <span class="kw">crate</span>::signal::channel(<span class="kw">crate</span>::signal::ShutdownKind::Testing);
+        <span class="kw">let </span>(shutdown_tx, shutdown_rx) = <span class="kw">crate</span>::signal::channel();
         <span class="self">self</span>.server_shutdown_tx.push(<span class="prelude-val">Some</span>(shutdown_tx.clone()));
         <span class="kw">let </span>ready = &lt;<span class="kw">_</span>&gt;::default();
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(address) = with_admin {
-            <span class="kw">crate</span>::components::admin::server(config.clone(), ready, shutdown_tx, address);
+            <span class="kw">crate</span>::components::admin::server(config.clone(), ready, shutdown_tx.clone(), address);
         }
 
         <span class="kw">let </span>server = server.unwrap_or_else(|| {
@@ -869,6 +867,7 @@
         });
 
         <span class="kw">let </span>(prox_tx, prox_rx) = tokio::sync::oneshot::channel();
+        <span class="kw">let </span>shutdown = <span class="kw">crate</span>::signal::ShutdownHandler::new(shutdown_tx, shutdown_rx);
 
         <span class="kw">let </span>port = <span class="kw">crate</span>::net::socket_port(server.socket.as_ref().unwrap());
 
@@ -878,12 +877,11 @@
                     <span class="kw">crate</span>::components::RunArgs {
                         config,
                         ready: Default::default(),
-                        shutdown_rx,
+                        shutdown,
                     },
                     <span class="prelude-val">Some</span>(prox_tx),
                 )
-                .<span class="kw">await
-                </span>.unwrap();
+                .unwrap();
         });
 
         prox_rx.<span class="kw">await</span>.unwrap();
@@ -896,7 +894,7 @@
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, rx)) = <span class="kw-2">&amp;</span><span class="self">self</span>.shutdown_ch {
             rx.clone()
         } <span class="kw">else </span>{
-            <span class="kw">let </span>ch = <span class="kw">crate</span>::signal::channel(ShutdownKind::Testing);
+            <span class="kw">let </span>ch = <span class="kw">crate</span>::signal::channel();
             <span class="kw">let </span>recv = ch.<span class="number">1</span>.clone();
             <span class="self">self</span>.shutdown_ch = <span class="prelude-val">Some</span>(ch);
             recv
@@ -1003,7 +1001,7 @@
 
         <span class="self">Self </span>{
             filters: <span class="kw">crate</span>::filters::FilterChain::try_create(std::iter::once(
-                <span class="kw">crate</span>::config::Filter {
+                <span class="kw">crate</span>::config::filter::Filter {
                     name: <span class="string">"TestFilter"</span>.into(),
                     label: <span class="prelude-val">None</span>,
                     config: <span class="prelude-val">None</span>,

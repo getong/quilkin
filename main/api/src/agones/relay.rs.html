@@ -426,7 +426,10 @@
 <a href="#425" id="425">425</a>
 <a href="#426" id="426">426</a>
 <a href="#427" id="427">427</a>
-<a href="#428" id="428">428</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2023 Google LLC All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -469,7 +472,7 @@
     <span class="kw">use </span>tokio::time::timeout;
 
     <span class="kw">use </span>quilkin::{
-        config::providers::k8s::agones::{Fleet, GameServer},
+        providers::k8s::agones::{Fleet, GameServer},
         test::TestHelper,
     };
 
@@ -490,10 +493,10 @@
         quilkin::test::enable_log(<span class="string">"agones=debug"</span>);
 
         run_test(<span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="number">0</span>).<span class="kw">await</span>;
-        run_test(<span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="number">1</span>).<span class="kw">await</span>;
-        run_test(<span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="number">2</span>).<span class="kw">await</span>;
-        run_test(<span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="number">3</span>).<span class="kw">await</span>;
-    }
+        <span class="comment">//run_test(true, true, false, 1).await;
+        //run_test(true, false, true, 2).await;
+        //run_test(false, true, true, 3).await;
+    </span>}
 
     <span class="kw">async fn </span>run_test(proxy: bool, relay: bool, agent: bool, id: u8) {
         <span class="macro">println!</span>(<span class="string">"running agones_token_router {id}"</span>);
@@ -708,9 +711,10 @@
 
         <span class="comment">// Setup the relay
         </span><span class="kw">let </span>args = [
-            <span class="string">"relay"</span>,
-            <span class="string">"agones"</span>,
-            <span class="string">"--config-namespace"</span>,
+            <span class="string">"--service.xds"</span>,
+            <span class="string">"--service.mds"</span>,
+            <span class="string">"--provider.k8s"</span>,
+            <span class="string">"--provider.k8s.namespace"</span>,
             client.namespace.as_str(),
         ]
         .map(String::from)
@@ -783,6 +787,8 @@
         .<span class="kw">await</span>;
         <span class="kw">if </span>result.is_err() {
             debug_pods(client, <span class="string">"role=relay"</span>.into()).<span class="kw">await</span>;
+            debug_pods(client, <span class="string">"role=agent"</span>.into()).<span class="kw">await</span>;
+            debug_pods(client, <span class="string">"role=proxy"</span>.into()).<span class="kw">await</span>;
 
             <span class="macro">panic!</span>(<span class="string">"Relay Deployment should be ready"</span>);
         }
@@ -795,15 +801,15 @@
 
             <span class="comment">// agent deployment
             </span><span class="kw">let </span>args = [
-                <span class="string">"agent"</span>,
-                <span class="string">"--relay"</span>,
+                <span class="string">"--provider.mds.endpoints"</span>,
                 <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"http://{relay_name}:7900"</span>),
-                <span class="string">"--icao-code"</span>,
+                <span class="string">"--locality.icao"</span>,
                 <span class="kw-2">&amp;</span>icao,
-                <span class="string">"agones"</span>,
-                <span class="string">"--config-namespace"</span>,
+                <span class="string">"--provider.k8s"</span>,
+                <span class="string">"--provider.k8s.namespace"</span>,
                 client.namespace.as_str(),
-                <span class="string">"--gameservers-namespace"</span>,
+                <span class="string">"--provider.k8s.agones"</span>,
+                <span class="string">"--provider.k8s.agones.namespace"</span>,
                 client.namespace.as_str(),
             ]
             .map(String::from)

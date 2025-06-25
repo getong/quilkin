@@ -178,7 +178,9 @@
 <a href="#177" id="177">177</a>
 <a href="#178" id="178">178</a>
 <a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2022 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -194,15 +196,11 @@
  * limitations under the License.
  */
 
-</span><span class="kw">pub mod </span>agones;
-<span class="kw">mod </span>fs;
-
-<span class="kw">pub use </span><span class="self">self</span>::{agones::watch <span class="kw">as </span>agones, fs::watch <span class="kw">as </span>fs};
-<span class="kw">use </span>std::sync::Arc;
+</span><span class="kw">use </span>std::{fmt, sync::Arc};
 
 <span class="kw">use </span>tokio::sync::watch;
 
-<span class="attr">#[derive(Clone, Debug)]
+<span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>Watch&lt;T&gt; {
     value: Arc&lt;T&gt;,
     watchers: Arc&lt;watch::Sender&lt;Arc&lt;T&gt;&gt;&gt;,
@@ -308,6 +306,12 @@
 
     <span class="kw">fn </span>is_referenceable() -&gt; bool {
         &lt;T&gt;::is_referenceable()
+    }
+}
+
+<span class="kw">impl</span>&lt;T: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>Watch&lt;T&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"{:?}"</span>, <span class="self">self</span>.value)
     }
 }
 
