@@ -699,8 +699,7 @@
 <a href="#698" id="698">698</a>
 <a href="#699" id="699">699</a>
 <a href="#700" id="700">700</a>
-<a href="#701" id="701">701</a>
-<a href="#702" id="702">702</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#701" id="701">701</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2024 Google LLC All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -864,7 +863,7 @@
 </span><span class="attr">#[repr(C)]
 </span><span class="kw">struct </span>LoopPacket {
     msghdr: libc::msghdr,
-    addr: libc::sockaddr_storage,
+    addr: socket2::SockAddrStorage,
     packet: <span class="prelude-ty">Option</span>&lt;LoopPacketInner&gt;,
     io_vec: libc::iovec,
 }
@@ -880,8 +879,7 @@
                 iov_base: std::ptr::null_mut(),
                 iov_len: <span class="number">0</span>,
             },
-            <span class="comment">// SAFETY: sockaddr_storage is POD
-            </span>addr: <span class="kw">unsafe </span>{ std::mem::zeroed() },
+            addr: socket2::SockAddrStorage::zeroed(),
         }
     }
 
@@ -918,7 +916,7 @@
         <span class="self">self</span>.msghdr.msg_iov = <span class="macro">std::ptr::addr_of_mut!</span>(<span class="self">self</span>.io_vec);
         <span class="self">self</span>.msghdr.msg_iovlen = <span class="number">1</span>;
         <span class="self">self</span>.msghdr.msg_name = <span class="macro">std::ptr::addr_of_mut!</span>(<span class="self">self</span>.addr).cast();
-        <span class="self">self</span>.msghdr.msg_namelen = std::mem::size_of::&lt;libc::sockaddr_storage&gt;() <span class="kw">as _</span>;
+        <span class="self">self</span>.msghdr.msg_namelen = std::mem::size_of::&lt;socket2::SockAddrStorage&gt;() <span class="kw">as _</span>;
     }
 
     <span class="attr">#[inline]

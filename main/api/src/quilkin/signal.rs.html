@@ -357,7 +357,7 @@
             });
 
             <span class="kw">if </span><span class="self">self</span>.services.is_empty() {
-                <span class="macro">tracing::debug!</span>(elapsed = <span class="question-mark">?</span>start.elapsed(), count = results.len(), <span class="string">"services all finished"</span>);
+                <span class="macro">tracing::info!</span>(elapsed = <span class="question-mark">?</span>start.elapsed(), count = results.len(), <span class="string">"services all finished"</span>);
                 <span class="kw">break</span>;
             }
 

@@ -384,7 +384,7 @@
     <span class="kw">pub </span>phoenix: <span class="kw">crate</span>::net::TcpListener,
     <span class="kw">pub </span>notifier: <span class="prelude-ty">Option</span>&lt;tokio::sync::mpsc::UnboundedSender&lt;String&gt;&gt;,
     <span class="kw">pub </span>xdp: <span class="kw">crate</span>::service::XdpOptions,
-    <span class="kw">pub </span>termination_timeout: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::cli::Timeout&gt;,
+    <span class="kw">pub </span>termination_timeout: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::cli::Duration&gt;,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>Proxy {

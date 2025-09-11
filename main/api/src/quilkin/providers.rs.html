@@ -699,7 +699,39 @@
 <a href="#698" id="698">698</a>
 <a href="#699" id="699">699</a>
 <a href="#700" id="700">700</a>
-<a href="#701" id="701">701</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2024 Google LLC All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -730,7 +762,9 @@
 <span class="kw">use </span>eyre::Context;
 <span class="kw">use </span>futures::TryStreamExt;
 
-<span class="kw">const </span>RETRIES: u32 = <span class="number">25</span>;
+<span class="doccomment">/// Functionally infinite retries as provider tasks are long running tasks
+/// that we continually want to retry and Quilkin can run for days or weeks.
+</span><span class="kw">const </span>RETRIES: u32 = u32::MAX;
 <span class="kw">const </span>BACKOFF_STEP: std::time::Duration = std::time::Duration::from_millis(<span class="number">250</span>);
 <span class="kw">const </span>MAX_DELAY: std::time::Duration = std::time::Duration::from_secs(<span class="number">2</span>);
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>NO_UPDATE_INTERVAL: std::time::Duration = std::time::Duration::from_secs(<span class="number">30</span>);
@@ -944,10 +978,19 @@
         <span class="self">self
     </span>}
 
+    <span class="kw">pub fn </span>grpc_pull_endpoints(
+        <span class="kw-2">mut </span><span class="self">self</span>,
+        endpoints: <span class="kw">impl </span>Into&lt;Vec&lt;tonic::transport::Endpoint&gt;&gt;,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.xds_endpoints = endpoints.into();
+        <span class="self">self
+    </span>}
+
     <span class="kw">pub fn </span>spawn_static_provider(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         config: FiltersAndClusters,
         health_check: <span class="kw-2">&amp;</span>AtomicBool,
+        locality: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::net::endpoint::Locality&gt;,
     ) -&gt; <span class="kw">crate</span>::Result&lt;<span class="kw">impl </span>Future&lt;Output = <span class="kw">crate</span>::Result&lt;()&gt;&gt; + <span class="lifetime">'static</span>&gt; {
         <span class="kw">let </span>endpoint_tokens = <span class="self">self
             </span>.endpoint_tokens
@@ -1031,7 +1074,7 @@
             <span class="string">"setting endpoints"
         </span>);
         config.clusters.modify(|clusters| {
-            clusters.insert(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, endpoints);
+            clusters.insert(<span class="prelude-val">None</span>, locality, endpoints);
         });
 
         health_check.store(<span class="bool-val">true</span>, Ordering::SeqCst);
@@ -1223,16 +1266,16 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         config: Arc&lt;config::Config&gt;,
         health_check: Arc&lt;AtomicBool&gt;,
+        notifier: <span class="prelude-ty">Option</span>&lt;tokio::sync::mpsc::UnboundedSender&lt;String&gt;&gt;,
     ) -&gt; <span class="kw">impl </span>Future&lt;Output = <span class="kw">crate</span>::Result&lt;()&gt;&gt; + <span class="lifetime">'static </span>{
         <span class="kw">let </span>config = config.clone();
         <span class="kw">let </span>endpoints = <span class="self">self</span>.xds_endpoints.clone();
-        <span class="kw">let </span>tx = <span class="prelude-ty">Option</span>::&lt;tokio::sync::mpsc::UnboundedSender&lt;String&gt;&gt;::None;
 
         <span class="self">Self</span>::task(<span class="string">"xds_provider"</span>.into(), health_check.clone(), <span class="kw">move </span>|| {
             <span class="kw">let </span>config = config.clone();
             <span class="kw">let </span>endpoints = endpoints.clone();
             <span class="kw">let </span>health_check = health_check.clone();
-            <span class="kw">let </span>tx = tx.clone();
+            <span class="kw">let </span>tx = notifier.clone();
             <span class="kw">async move </span>{
                 <span class="kw">let </span>identifier = config.id();
                 <span class="kw">let </span>stream = <span class="kw">crate</span>::net::xds::delta_subscribe(
@@ -1287,17 +1330,30 @@
             || <span class="self">self</span>.static_enabled()
     }
 
+    <span class="doccomment">/// Adds the required typemap entries to the config depending on what providers are enabled
+    </span><span class="kw">pub fn </span>init_config(<span class="kw-2">&amp;</span><span class="self">self</span>, config: <span class="kw-2">&amp;mut </span>config::Config) {
+        <span class="kw">use </span><span class="kw">crate</span>::config::insert_default;
+
+        <span class="comment">// TODO are these required by all providers or only some?
+        </span><span class="kw">if </span><span class="self">self</span>.any_provider_enabled() {
+            insert_default::&lt;<span class="kw">crate</span>::filters::FilterChain&gt;(<span class="kw-2">&amp;mut </span>config.dyn_cfg.typemap);
+            insert_default::&lt;<span class="kw">crate</span>::net::ClusterMap&gt;(<span class="kw-2">&amp;mut </span>config.dyn_cfg.typemap);
+        }
+    }
+
     <span class="kw">pub fn </span>spawn_providers(
         <span class="self">self</span>,
         config: <span class="kw-2">&amp;</span>Arc&lt;config::Config&gt;,
         health_check: Arc&lt;AtomicBool&gt;,
         locality: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::net::endpoint::Locality&gt;,
+        notifier: <span class="prelude-ty">Option</span>&lt;tokio::sync::mpsc::UnboundedSender&lt;String&gt;&gt;,
         shutdown: tokio::sync::watch::Receiver&lt;()&gt;,
     ) -&gt; tokio::task::JoinSet&lt;<span class="kw">crate</span>::Result&lt;()&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>providers = tokio::task::JoinSet::new();
 
         <span class="kw">if </span>!<span class="self">self</span>.any_provider_enabled() {
             <span class="macro">tracing::info!</span>(<span class="string">"no configuration providers specified"</span>);
+            health_check.store(<span class="bool-val">true</span>, std::sync::atomic::Ordering::Relaxed);
             <span class="kw">return </span>providers;
         }
 
@@ -1332,7 +1388,11 @@
         }
 
         <span class="kw">if </span><span class="self">self</span>.grpc_pull_enabled() {
-            providers.spawn(<span class="self">self</span>.spawn_xds_provider(config.clone(), health_check.clone()));
+            providers.spawn(<span class="self">self</span>.spawn_xds_provider(
+                config.clone(),
+                health_check.clone(),
+                notifier,
+            ));
         }
 
         <span class="kw">if </span><span class="self">self</span>.fs_enabled() {
@@ -1344,6 +1404,7 @@
                 {
                     <span class="kw">let </span>path = <span class="self">self</span>.fs_path.clone();
                     <span class="kw">let </span>health_check = health_check.clone();
+                    <span class="kw">let </span>locality = locality.clone();
 
                     <span class="kw">move </span>|| {
                         fs::watch(
@@ -1363,7 +1424,10 @@
             .flatten()
         {
             health_check.store(<span class="bool-val">true</span>, Ordering::SeqCst);
-            providers.spawn(<span class="self">self</span>.spawn_static_provider(fc, <span class="kw-2">&amp;</span>health_check).unwrap());
+            providers.spawn(
+                <span class="self">self</span>.spawn_static_provider(fc, <span class="kw-2">&amp;</span>health_check, locality.clone())
+                    .unwrap(),
+            );
         }
 
         <span class="macro">assert!</span>(

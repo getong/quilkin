@@ -945,7 +945,14 @@
 <a href="#944" id="944">944</a>
 <a href="#945" id="945">945</a>
 <a href="#946" id="946">946</a>
-<a href="#947" id="947">947</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#947" id="947">947</a>
+<a href="#948" id="948">948</a>
+<a href="#949" id="949">949</a>
+<a href="#950" id="950">950</a>
+<a href="#951" id="951">951</a>
+<a href="#952" id="952">952</a>
+<a href="#953" id="953">953</a>
+<a href="#954" id="954">954</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2022 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -978,7 +985,7 @@
     generated::quilkin::relay::v1alpha1::aggregated_control_plane_discovery_service_server::{
         AggregatedControlPlaneDiscoveryService, AggregatedControlPlaneDiscoveryServiceServer,
     },
-    metrics,
+    metrics::{<span class="self">self</span>, KIND_SERVER},
     net::TcpListener,
 };
 
@@ -1163,6 +1170,7 @@
             is_relay = <span class="self">self</span>.is_relay,
             <span class="string">"pushing update"
         </span>);
+        <span class="kw">crate</span>::metrics::actions_total(KIND_SERVER, <span class="string">"push"</span>).inc();
         <span class="kw">if </span><span class="self">self</span>.tx.send(resource_type).is_err() {
             <span class="macro">tracing::debug!</span>(<span class="string">"no client connections currently subscribed"</span>);
         }
@@ -1205,13 +1213,14 @@
             <span class="string">"subscribed to config updates"
         </span>);
 
-        <span class="kw">let </span>control_plane_id = <span class="kw">crate</span>::core::ControlPlane {
+        <span class="kw">let </span>control_plane = <span class="prelude-val">Some</span>(<span class="kw">crate</span>::core::ControlPlane {
             identifier: id.clone(),
-        };
+        });
 
         <span class="kw">use </span><span class="kw">crate</span>::config::ClientTracker;
         <span class="kw">let </span><span class="kw-2">mut </span>client_tracker = ClientTracker::track_client(node_id.clone());
 
+        <span class="kw">let </span>responder_control_plane = control_plane.clone();
         <span class="kw">let </span>client = node_id.clone();
         <span class="kw">let </span>cfg = <span class="self">self</span>.config.clone();
         <span class="kw">let </span><span class="kw-2">mut </span>shutdown = <span class="self">self</span>.shutdown.clone();
@@ -1269,7 +1278,7 @@
                     <span class="kw">let </span>response = DeltaDiscoveryResponse {
                         resources: req.resources,
                         nonce: nonce.to_string(),
-                        control_plane: <span class="prelude-val">Some</span>(control_plane_id.clone()),
+                        control_plane: responder_control_plane.clone(),
                         type_url: type_url.into(),
                         removed_resources,
                         system_version_info: VERSION_INFO.into(),
@@ -1298,7 +1307,7 @@
                 DeltaDiscoveryResponse {
                     resources: Vec::new(),
                     nonce: String::new(),
-                    control_plane: <span class="prelude-val">None</span>,
+                    control_plane: control_plane.clone(),
                     type_url: message.type_url,
                     removed_resources: Vec::new(),
                     system_version_info: VERSION_INFO.into(),
@@ -1311,7 +1320,7 @@
                     DeltaDiscoveryResponse {
                         resources: Vec::new(),
                         nonce: String::new(),
-                        control_plane: <span class="prelude-val">None</span>,
+                        control_plane: control_plane.clone(),
                         type_url,
                         removed_resources: Vec::new(),
                         system_version_info: VERSION_INFO.into(),
@@ -1334,6 +1343,7 @@
                                     <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(res)) =&gt; <span class="kw">yield </span>res,
                                     <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {}
                                     <span class="prelude-val">Err</span>(error) =&gt; {
+                                        <span class="kw">crate</span>::metrics::errors_total(KIND_SERVER, <span class="string">"respond"</span>).inc();
                                         <span class="macro">tracing::error!</span>(%error, <span class="string">"responder failed to generate response"</span>);
                                         <span class="kw">continue</span>;
                                     },
@@ -1347,6 +1357,7 @@
                                         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(res)) =&gt; <span class="kw">yield </span>res,
                                         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {},
                                         <span class="prelude-val">Err</span>(error) =&gt; {
+                                            <span class="kw">crate</span>::metrics::errors_total(KIND_SERVER, <span class="string">"respond"</span>).inc();
                                             <span class="macro">tracing::error!</span>(%error, <span class="string">"responder failed to generate response"</span>);
                                             <span class="kw">continue</span>;
                                         }
@@ -1360,6 +1371,7 @@
                             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(value)) =&gt; value,
                             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; <span class="kw">break</span>,
                             <span class="prelude-val">Err</span>(error) =&gt; {
+                                <span class="kw">crate</span>::metrics::errors_total(KIND_SERVER, <span class="string">"receive"</span>).inc();
                                 <span class="macro">tracing::error!</span>(%error, <span class="string">"error receiving delta response"</span>);
                                 <span class="kw">continue</span>;
                             }
@@ -1382,6 +1394,7 @@
                                     <span class="macro">tracing::trace!</span>(%nonce, <span class="string">"ACK"</span>);
                                 }
                                 <span class="prelude-val">Err</span>(error) =&gt; {
+                                    <span class="kw">crate</span>::metrics::errors_total(KIND_SERVER, <span class="string">"ack"</span>).inc();
                                     <span class="macro">tracing::error!</span>(%nonce, %error, <span class="string">"failed to process client ack"</span>);
                                 }
                             }
@@ -1632,13 +1645,14 @@
             <span class="string">"subscribed to config updates"
         </span>);
 
-        <span class="kw">let </span>control_plane_id = <span class="kw">crate</span>::core::ControlPlane {
+        <span class="kw">let </span>control_plane = <span class="prelude-val">Some</span>(<span class="kw">crate</span>::core::ControlPlane {
             identifier: id.clone(),
-        };
+        });
 
         <span class="kw">use </span><span class="kw">crate</span>::config::ClientTracker;
         <span class="kw">let </span><span class="kw-2">mut </span>client_tracker = ClientTracker::track_client(node_id.clone());
 
+        <span class="kw">let </span>responder_control_plane = control_plane.clone();
         <span class="kw">let </span>client = node_id.clone();
         <span class="kw">let </span>cfg = <span class="self">self</span>.config.clone();
         <span class="kw">let </span>responder = <span class="kw">move </span>|req: <span class="prelude-ty">Option</span>&lt;DeltaDiscoveryRequest&gt;,
@@ -1694,7 +1708,7 @@
                     <span class="kw">let </span>response = DeltaDiscoveryResponse {
                         resources: req.resources,
                         nonce: nonce.to_string(),
-                        control_plane: <span class="prelude-val">Some</span>(control_plane_id.clone()),
+                        control_plane: responder_control_plane.clone(),
                         type_url: type_url.into(),
                         removed_resources,
                         system_version_info: VERSION_INFO.into(),
@@ -1723,7 +1737,7 @@
                 DeltaDiscoveryResponse {
                     resources: Vec::new(),
                     nonce: String::new(),
-                    control_plane: <span class="prelude-val">None</span>,
+                    control_plane: control_plane.clone(),
                     type_url: message.type_url,
                     removed_resources: Vec::new(),
                     system_version_info: VERSION_INFO.into(),
@@ -1736,7 +1750,7 @@
                     DeltaDiscoveryResponse {
                         resources: Vec::new(),
                         nonce: String::new(),
-                        control_plane: <span class="prelude-val">None</span>,
+                        control_plane: control_plane.clone(),
                         type_url,
                         removed_resources: Vec::new(),
                         system_version_info: VERSION_INFO.into(),

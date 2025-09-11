@@ -735,76 +735,17 @@
 <a href="#734" id="734">734</a>
 <a href="#735" id="735">735</a>
 <a href="#736" id="736">736</a>
-<a href="#737" id="737">737</a>
-<a href="#738" id="738">738</a>
-<a href="#739" id="739">739</a>
-<a href="#740" id="740">740</a>
-<a href="#741" id="741">741</a>
-<a href="#742" id="742">742</a>
-<a href="#743" id="743">743</a>
-<a href="#744" id="744">744</a>
-<a href="#745" id="745">745</a>
-<a href="#746" id="746">746</a>
-<a href="#747" id="747">747</a>
-<a href="#748" id="748">748</a>
-<a href="#749" id="749">749</a>
-<a href="#750" id="750">750</a>
-<a href="#751" id="751">751</a>
-<a href="#752" id="752">752</a>
-<a href="#753" id="753">753</a>
-<a href="#754" id="754">754</a>
-<a href="#755" id="755">755</a>
-<a href="#756" id="756">756</a>
-<a href="#757" id="757">757</a>
-<a href="#758" id="758">758</a>
-<a href="#759" id="759">759</a>
-<a href="#760" id="760">760</a>
-<a href="#761" id="761">761</a>
-<a href="#762" id="762">762</a>
-<a href="#763" id="763">763</a>
-<a href="#764" id="764">764</a>
-<a href="#765" id="765">765</a>
-<a href="#766" id="766">766</a>
-<a href="#767" id="767">767</a>
-<a href="#768" id="768">768</a>
-<a href="#769" id="769">769</a>
-<a href="#770" id="770">770</a>
-<a href="#771" id="771">771</a>
-<a href="#772" id="772">772</a>
-<a href="#773" id="773">773</a>
-<a href="#774" id="774">774</a>
-<a href="#775" id="775">775</a>
-<a href="#776" id="776">776</a>
-<a href="#777" id="777">777</a>
-<a href="#778" id="778">778</a>
-<a href="#779" id="779">779</a>
-<a href="#780" id="780">780</a>
-<a href="#781" id="781">781</a>
-<a href="#782" id="782">782</a>
-<a href="#783" id="783">783</a>
-<a href="#784" id="784">784</a>
-<a href="#785" id="785">785</a>
-<a href="#786" id="786">786</a>
-<a href="#787" id="787">787</a>
-<a href="#788" id="788">788</a>
-<a href="#789" id="789">789</a>
-<a href="#790" id="790">790</a></pre></div><pre class="rust"><code><span class="kw">use </span>eyre::ContextCompat;
+<a href="#737" id="737">737</a></pre></div><pre class="rust"><code><span class="kw">use </span>eyre::ContextCompat;
 <span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">use crate</span>::{
-    components::proxy::SessionPool,
-    config::{Config, IcaoCode},
-    signal::ShutdownHandler,
-};
-
-<span class="kw">const </span>ETC_CONFIG_PATH: <span class="kw-2">&amp;</span>str = <span class="string">"/etc/quilkin/quilkin.yaml"</span>;
+<span class="kw">use crate</span>::{components::proxy::SessionPool, config::Config, signal::ShutdownHandler};
 
 <span class="attr">#[derive(Debug, clap::Parser)]
 #[command(next_help_heading = <span class="string">"Service Options"</span>)]
 </span><span class="kw">pub struct </span>Service {
     <span class="doccomment">/// The identifier for an instance.
     </span><span class="attr">#[arg(long = <span class="string">"service.id"</span>, env = <span class="string">"QUILKIN_SERVICE_ID"</span>)]
-    </span>id: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    </span><span class="kw">pub </span>id: <span class="prelude-ty">Option</span>&lt;String&gt;,
     <span class="doccomment">/// Whether to serve mDS requests.
     </span><span class="attr">#[arg(
         long = <span class="string">"service.mds"</span>,
@@ -918,7 +859,7 @@
     )]
     </span>tls_key_path: <span class="prelude-ty">Option</span>&lt;std::path::PathBuf&gt;,
     <span class="attr">#[clap(long = <span class="string">"termination-timeout"</span>)]
-    </span>termination_timeout: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::cli::Timeout&gt;,
+    </span>termination_timeout: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::cli::Duration&gt;,
     <span class="attr">#[clap(skip)]
     </span>testing: bool,
 }
@@ -1044,70 +985,26 @@
             || <span class="self">self</span>.grpc_enabled
     }
 
-    <span class="kw">pub fn </span>build_config(<span class="kw-2">&amp;</span><span class="self">self</span>, icao_code: IcaoCode) -&gt; eyre::Result&lt;Config&gt; {
+    <span class="doccomment">/// Adds the required typemap entries to the config depending on what services are enabled
+    </span><span class="kw">pub fn </span>init_config(<span class="kw-2">&amp;</span><span class="self">self</span>, config: <span class="kw-2">&amp;mut </span>Config) {
         <span class="kw">use </span><span class="kw">crate</span>::config::{<span class="self">self</span>, insert_default};
 
-        <span class="kw">let </span><span class="kw-2">mut </span>typemap = <span class="kw">crate</span>::config::default_typemap();
-
         <span class="kw">if </span><span class="self">self</span>.udp_enabled || <span class="self">self</span>.xds_enabled || <span class="self">self</span>.mds_enabled {
-            insert_default::&lt;<span class="kw">crate</span>::filters::FilterChain&gt;(<span class="kw-2">&amp;mut </span>typemap);
-            insert_default::&lt;config::DatacenterMap&gt;(<span class="kw-2">&amp;mut </span>typemap);
+            insert_default::&lt;<span class="kw">crate</span>::filters::FilterChain&gt;(<span class="kw-2">&amp;mut </span>config.dyn_cfg.typemap);
+            insert_default::&lt;config::DatacenterMap&gt;(<span class="kw-2">&amp;mut </span>config.dyn_cfg.typemap);
         }
 
         <span class="kw">if </span><span class="self">self</span>.qcmp_enabled {
-            typemap.insert::&lt;config::qcmp::QcmpPort&gt;(config::qcmp::QcmpPort::new(<span class="self">self</span>.qcmp_port));
+            config
+                .dyn_cfg
+                .typemap
+                .insert::&lt;config::qcmp::QcmpPort&gt;(config::qcmp::QcmpPort::new(<span class="self">self</span>.qcmp_port));
         }
 
-        insert_default::&lt;<span class="kw">crate</span>::net::ClusterMap&gt;(<span class="kw-2">&amp;mut </span>typemap);
-
-        <span class="prelude-val">Ok</span>(Config {
-            dyn_cfg: config::DynamicConfig {
-                id: Arc::new(parking_lot::Mutex::new(config::default_id())),
-                version: config::Version::default(),
-                icao_code: config::NotifyingIcaoCode::new(icao_code),
-                typemap,
-            },
-        })
+        insert_default::&lt;<span class="kw">crate</span>::net::ClusterMap&gt;(<span class="kw-2">&amp;mut </span>config.dyn_cfg.typemap);
     }
 
-    <span class="doccomment">/// Attempts to find and configure a `Config` from a file
-    ///
-    ///
-    </span><span class="kw">pub fn </span>read_config(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        config_path: <span class="kw-2">&amp;</span>std::path::Path,
-        icao_code: IcaoCode,
-        locality: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::net::endpoint::Locality&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;Config&gt;, eyre::Error&gt; {
-        <span class="kw">let </span>paths = [config_path, std::path::Path::new(ETC_CONFIG_PATH)];
-        <span class="kw">let </span><span class="kw-2">mut </span>paths = paths.iter();
-
-        <span class="kw">let </span>file = <span class="kw">loop </span>{
-            <span class="kw">let </span><span class="prelude-val">Some</span>(path) = paths.next() <span class="kw">else </span>{
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(&lt;<span class="kw">_</span>&gt;::default());
-            };
-
-            <span class="kw">match </span>std::fs::File::open(path) {
-                <span class="prelude-val">Ok</span>(file) =&gt; <span class="kw">break </span>file,
-                <span class="prelude-val">Err</span>(err) <span class="kw">if </span>err.kind() == std::io::ErrorKind::NotFound =&gt; {
-                    <span class="macro">tracing::debug!</span>(path = %path.display(), <span class="string">"config path not found"</span>);
-                    <span class="kw">continue</span>;
-                }
-                <span class="prelude-val">Err</span>(err) =&gt; {
-                    <span class="macro">tracing::error!</span>(path = %path.display(), error = <span class="question-mark">?</span>err, <span class="string">"failed to read path"</span>);
-                    <span class="macro">eyre::bail!</span>(err);
-                }
-            }
-        };
-
-        <span class="kw">let </span>config = <span class="self">self</span>.build_config(icao_code)<span class="question-mark">?</span>;
-        <span class="kw">let </span>json = serde_yaml::from_reader(file)<span class="question-mark">?</span>;
-        config.update_from_json(json, locality)<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(Arc::new(config))
-    }
-
-    <span class="kw">pub fn </span>termination_timeout(<span class="kw-2">mut </span><span class="self">self</span>, timeout: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::cli::Timeout&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>termination_timeout(<span class="kw-2">mut </span><span class="self">self</span>, timeout: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::cli::Duration&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.termination_timeout = timeout;
         <span class="self">self
     </span>}
@@ -1200,7 +1097,7 @@
         <span class="kw">let </span>finalizer = <span class="kw">crate</span>::net::phoenix::spawn(
             phoenix,
             datacenters.clone(),
-            <span class="kw">crate</span>::net::phoenix::Phoenix::new(<span class="kw">crate</span>::codec::qcmp::QcmpMeasurement::new()<span class="question-mark">?</span>),
+            <span class="kw">crate</span>::net::phoenix::Phoenix::new(<span class="kw">crate</span>::codec::qcmp::QcmpTransceiver::new()<span class="question-mark">?</span>),
             shutdown.shutdown_rx(),
         )<span class="question-mark">?</span>;
 
@@ -1230,15 +1127,12 @@
             .qcmp_port()
             .context(<span class="string">"QCMP was enabled, but QCMP port was not inserted into typemap"</span>)<span class="question-mark">?</span>;
 
+        qcmp_port.store(<span class="self">self</span>.qcmp_port);
+
         <span class="macro">tracing::info!</span>(port=%<span class="self">self</span>.qcmp_port, <span class="string">"starting qcmp service"</span>);
         <span class="kw">let </span>qcmp = <span class="kw">crate</span>::net::raw_socket_with_reuse(<span class="self">self</span>.qcmp_port)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>join = <span class="kw">crate</span>::codec::qcmp::spawn(qcmp, qcmp_port.subscribe(), shutdown.shutdown_rx())<span class="question-mark">?</span>;
-        <span class="kw">let </span>finished = shutdown.push(<span class="string">"qcmp"</span>);
-        tokio::spawn(<span class="kw">async move </span>{
-            drop(join.<span class="kw">await</span>);
-            drop(finished.send(<span class="prelude-val">Ok</span>(())));
-        });
+        <span class="kw">crate</span>::codec::qcmp::spawn(qcmp, qcmp_port.subscribe(), shutdown)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }

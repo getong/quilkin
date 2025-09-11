@@ -36,6 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc.js"></script>
@@ -92,10 +93,13 @@
                 sidebar = sidebar || 'visible';
             } else {
                 sidebar = 'hidden';
+                sidebar_toggle.checked = false;
             }
-            sidebar_toggle.checked = sidebar === 'visible';
-            html.classList.remove('sidebar-visible');
-            html.classList.add("sidebar-" + sidebar);
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
@@ -146,7 +150,12 @@
 
                 <div id="search-wrapper" class="hidden">
                     <form id="searchbar-outer" class="searchbar-outer">
-                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
                     </form>
                     <div id="searchresults-outer" class="searchresults-outer hidden">
                         <div id="searchresults-header" class="searchresults-header"></div>
@@ -277,8 +286,8 @@ proxy. To see a basic usage of the command-line interface run through the
 for deploying quilkin for your game network.</li>
 </ul>
 <pre><code class="language-shell">$ quilkin --help
-{"timestamp":"2025-06-25T16:25:06.220953Z","level":"INFO","fields":{"message":"Starting Quilkin","version":"0.10.0-dev","commit":"9f0b3a72bb7f7be584277891a200ada57a962369"},"target":"quilkin::cli","filename":"src/cli.rs","threadId":"ThreadId(1)"}
-{"timestamp":"2025-06-25T16:25:06.221160Z","level":"ERROR","fields":{"message":"fatal error","error":"no service, provider, or command specified, shutting down"},"target":"quilkin","filename":"src/main.rs","threadId":"ThreadId(1)"}
+{"timestamp":"2025-09-11T14:26:09.821214Z","level":"INFO","fields":{"message":"Starting Quilkin","version":"0.10.0-dev","commit":"db85d02159a54ebc38f4ad3edba3d1a3b6d5f9d1"},"target":"quilkin::cli","filename":"src/cli.rs","threadId":"ThreadId(1)"}
+{"timestamp":"2025-09-11T14:26:09.821376Z","level":"ERROR","fields":{"message":"fatal error","error":"no service, provider, or command specified, shutting down"},"target":"quilkin","filename":"src/main.rs","threadId":"ThreadId(1)"}
 </code></pre>
 
                     </main>
@@ -321,6 +330,7 @@ for deploying quilkin for your game network.</li>
         <script src="book.js"></script>
 
         <!-- Custom JS scripts -->
+
 
 
     </div>
