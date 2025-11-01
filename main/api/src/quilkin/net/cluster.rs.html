@@ -883,7 +883,23 @@
 <a href="#882" id="882">882</a>
 <a href="#883" id="883">883</a>
 <a href="#884" id="884">884</a>
-<a href="#885" id="885">885</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#885" id="885">885</a>
+<a href="#886" id="886">886</a>
+<a href="#887" id="887">887</a>
+<a href="#888" id="888">888</a>
+<a href="#889" id="889">889</a>
+<a href="#890" id="890">890</a>
+<a href="#891" id="891">891</a>
+<a href="#892" id="892">892</a>
+<a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
+<a href="#901" id="901">901</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -938,7 +954,7 @@
                 <span class="string">"active_endpoints"</span>,
                 <span class="string">"Number of currently available endpoints across clusters"</span>,
             },
-            <span class="kw-2">&amp;</span>[<span class="string">"cluster"</span>],
+            <span class="kw-2">&amp;</span>[<span class="string">"quilkin_cluster"</span>],
             <span class="kw">crate</span>::metrics::registry(),
         }
         .unwrap()
@@ -999,9 +1015,6 @@
     <span class="kw">pub </span>token_map: TokenAddressMap,
     <span class="doccomment">/// The hash of all of the endpoints in this set
     </span>hash: u64,
-    <span class="doccomment">/// Version of this set of endpoints. Any mutatation of the endpoints
-    /// set monotonically increases this number
-    </span>version: u64,
 }
 
 <span class="kw">impl </span>EndpointSet {
@@ -1012,7 +1025,6 @@
             endpoints,
             token_map: &lt;<span class="kw">_</span>&gt;::default(),
             hash: <span class="number">0</span>,
-            version: <span class="number">0</span>,
         };
 
         this.update();
@@ -1030,7 +1042,6 @@
             endpoints,
             token_map: &lt;<span class="kw">_</span>&gt;::default(),
             hash: hash.number(),
-            version: <span class="number">1</span>,
         };
 
         this.build_token_map();
@@ -1070,7 +1081,7 @@
         <span class="kw">for </span>ep <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.endpoints {
             ep.hash(<span class="kw-2">&amp;mut </span>hasher);
 
-            <span class="kw">for </span>tok <span class="kw">in </span><span class="kw-2">&amp;</span>ep.metadata.known.tokens {
+            <span class="kw">for </span>tok <span class="kw">in </span>ep.metadata.known.tokens.iter() {
                 <span class="kw">let </span>hash = gxhash::gxhash64(tok, HASH_SEED);
                 token_map
                     .entry(hash)
@@ -1080,7 +1091,6 @@
         }
 
         <span class="self">self</span>.hash = hasher.finish();
-        <span class="self">self</span>.version += <span class="number">1</span>;
         std::mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.token_map, token_map)
     }
 
@@ -1091,7 +1101,7 @@
 
         <span class="comment">// This is only called on proxies, so calculate a token map
         </span><span class="kw">for </span>ep <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.endpoints {
-            <span class="kw">for </span>tok <span class="kw">in </span><span class="kw-2">&amp;</span>ep.metadata.known.tokens {
+            <span class="kw">for </span>tok <span class="kw">in </span>ep.metadata.known.tokens.iter() {
                 <span class="kw">let </span>hash = gxhash::gxhash64(tok, HASH_SEED);
                 token_map
                     .entry(hash)
@@ -1117,7 +1127,6 @@
             <span class="self">self</span>.update()
         } <span class="kw">else </span>{
             <span class="self">self</span>.hash = replacement.hash;
-            <span class="self">self</span>.version += <span class="number">1</span>;
             <span class="self">self</span>.build_token_map()
         };
 
@@ -1440,6 +1449,17 @@
     }
 
     <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>remove_contributor(<span class="kw-2">&amp;</span><span class="self">self</span>, remote_addr: <span class="prelude-ty">Option</span>&lt;std::net::IpAddr&gt;) {
+        <span class="self">self</span>.localities.retain(|k, v| {
+            <span class="kw">let </span>keep = <span class="kw-2">*</span>v != remote_addr;
+            <span class="kw">if </span>!keep {
+                <span class="macro">tracing::debug!</span>(locality=<span class="question-mark">?</span>k, <span class="question-mark">?</span>remote_addr, <span class="string">"removing locality contributor"</span>);
+            }
+            keep
+        });
+    }
+
+    <span class="attr">#[inline]
     </span><span class="kw">pub fn </span>remove_locality(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         remote_addr: <span class="prelude-ty">Option</span>&lt;std::net::IpAddr&gt;,
@@ -1538,13 +1558,15 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>EndpointWithLocality {
     <span class="kw">pub </span>endpoints: BTreeSet&lt;Endpoint&gt;,
     <span class="kw">pub </span>locality: <span class="prelude-ty">Option</span>&lt;Locality&gt;,
+    <span class="kw">pub </span>version: <span class="prelude-ty">Option</span>&lt;u64&gt;,
 }
 
-<span class="kw">impl </span>From&lt;(<span class="prelude-ty">Option</span>&lt;Locality&gt;, BTreeSet&lt;Endpoint&gt;)&gt; <span class="kw">for </span>EndpointWithLocality {
-    <span class="kw">fn </span>from((locality, endpoints): (<span class="prelude-ty">Option</span>&lt;Locality&gt;, BTreeSet&lt;Endpoint&gt;)) -&gt; <span class="self">Self </span>{
+<span class="kw">impl </span>From&lt;(<span class="prelude-ty">Option</span>&lt;Locality&gt;, <span class="kw-2">&amp;</span>EndpointSet)&gt; <span class="kw">for </span>EndpointWithLocality {
+    <span class="kw">fn </span>from((locality, endpoint_set): (<span class="prelude-ty">Option</span>&lt;Locality&gt;, <span class="kw-2">&amp;</span>EndpointSet)) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             locality,
-            endpoints,
+            endpoints: endpoint_set.endpoints.clone(),
+            version: <span class="prelude-val">Some</span>(endpoint_set.version().number()),
         }
     }
 }
@@ -1600,7 +1622,19 @@
                 |EndpointWithLocality {
                      locality,
                      endpoints,
-                 }| { (locality, EndpointSet::new(endpoints)) },
+                     version,
+                 }| {
+                    <span class="kw">let </span>eps = <span class="kw">if let </span><span class="prelude-val">Some</span>(version) = version {
+                        EndpointSet::with_version(
+                            endpoints,
+                            EndpointSetVersion::from_number(version),
+                        )
+                    } <span class="kw">else </span>{
+                        EndpointSet::new(endpoints)
+                    };
+
+                    (locality, eps)
+                },
             )
             .collect::&lt;DashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;();
         <span class="prelude-val">Ok</span>(<span class="self">Self</span>::from(map))
@@ -1614,9 +1648,7 @@
     {
         <span class="self">self</span>.map
             .iter()
-            .map(|entry| {
-                EndpointWithLocality::from((entry.key().clone(), entry.value().endpoints.clone()))
-            })
+            .map(|entry| EndpointWithLocality::from((entry.key().clone(), entry.value())))
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
             .serialize(ser)
     }

@@ -952,7 +952,55 @@
 <a href="#951" id="951">951</a>
 <a href="#952" id="952">952</a>
 <a href="#953" id="953">953</a>
-<a href="#954" id="954">954</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#954" id="954">954</a>
+<a href="#955" id="955">955</a>
+<a href="#956" id="956">956</a>
+<a href="#957" id="957">957</a>
+<a href="#958" id="958">958</a>
+<a href="#959" id="959">959</a>
+<a href="#960" id="960">960</a>
+<a href="#961" id="961">961</a>
+<a href="#962" id="962">962</a>
+<a href="#963" id="963">963</a>
+<a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
+<a href="#966" id="966">966</a>
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
+<a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
+<a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
+<a href="#976" id="976">976</a>
+<a href="#977" id="977">977</a>
+<a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
+<a href="#983" id="983">983</a>
+<a href="#984" id="984">984</a>
+<a href="#985" id="985">985</a>
+<a href="#986" id="986">986</a>
+<a href="#987" id="987">987</a>
+<a href="#988" id="988">988</a>
+<a href="#989" id="989">989</a>
+<a href="#990" id="990">990</a>
+<a href="#991" id="991">991</a>
+<a href="#992" id="992">992</a>
+<a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
+<a href="#998" id="998">998</a>
+<a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2022 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1053,13 +1101,54 @@
     }
 }
 
+<span class="kw">const </span>RESPONSE_PROPAGATION_INTERVAL: Duration = Duration::from_millis(<span class="number">100</span>);
+
+<span class="doccomment">/// Buffers response broadcasts so they can be propagated at a set interval instead of every time
+/// something has changed.
+</span><span class="attr">#[derive(Debug, Default)]
+</span><span class="kw">struct </span>ResponseBroadcastPropagationBuffer {
+    changed_resources: std::sync::Mutex&lt;std::collections::HashSet&lt;String&gt;&gt;,
+}
+
+<span class="kw">impl </span>ResponseBroadcastPropagationBuffer {
+    <span class="doccomment">/// Ingest a resource broadcast message
+    </span><span class="kw">fn </span>ingest(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        result: <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>str, tokio::sync::broadcast::error::RecvError&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), tokio::sync::broadcast::error::RecvError&gt; {
+        result.map(|resource| {
+            <span class="kw">let </span><span class="kw-2">mut </span>guard = <span class="kw">match </span><span class="self">self</span>.changed_resources.lock() {
+                <span class="prelude-val">Ok</span>(guard) =&gt; guard,
+                <span class="prelude-val">Err</span>(poisoned) =&gt; {
+                    <span class="kw">let </span>guard = poisoned.into_inner();
+                    <span class="macro">tracing::warn!</span>(<span class="string">"recovered from poisoned mutex"</span>);
+                    guard
+                }
+            };
+            guard.insert(resource.into());
+        })
+    }
+
+    <span class="doccomment">/// Flush all changed resources and reset the buffer
+    </span><span class="kw">fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;String&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>guard = <span class="kw">match </span><span class="self">self</span>.changed_resources.lock() {
+            <span class="prelude-val">Ok</span>(guard) =&gt; guard,
+            <span class="prelude-val">Err</span>(poisoned) =&gt; {
+                <span class="kw">let </span>guard = poisoned.into_inner();
+                <span class="macro">tracing::warn!</span>(<span class="string">"recovered from poisoned mutex"</span>);
+                guard
+            }
+        };
+        guard.drain().collect()
+    }
+}
+
 <span class="kw">const </span>VERSION_INFO: <span class="kw-2">&amp;</span>str = <span class="string">"9"</span>;
 
 <span class="kw">pub struct </span>ControlPlane&lt;C&gt; {
     <span class="kw">pub </span>config: Arc&lt;C&gt;,
     <span class="kw">pub </span>idle_request_interval: Duration,
     tx: tokio::sync::broadcast::Sender&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;,
-    <span class="kw">pub </span>is_relay: bool,
     <span class="kw">pub </span>shutdown: ShutdownSignal,
 }
 
@@ -1069,7 +1158,6 @@
             config: <span class="self">self</span>.config.clone(),
             idle_request_interval: <span class="self">self</span>.idle_request_interval,
             tx: <span class="self">self</span>.tx.clone(),
-            is_relay: <span class="self">self</span>.is_relay,
             shutdown: <span class="self">self</span>.shutdown.clone(),
         }
     }
@@ -1087,7 +1175,6 @@
             config,
             idle_request_interval,
             tx,
-            is_relay: <span class="bool-val">false</span>,
             shutdown,
         }
     }
@@ -1099,11 +1186,10 @@
     }
 
     <span class="kw">pub fn </span>management_server(
-        <span class="kw-2">mut </span><span class="self">self</span>,
+        <span class="self">self</span>,
         listener: TcpListener,
         tls: <span class="prelude-ty">Option</span>&lt;TlsIdentity&gt;,
     ) -&gt; eyre::Result&lt;<span class="kw">impl </span>std::future::Future&lt;Output = <span class="kw">crate</span>::Result&lt;()&gt;&gt;&gt; {
-        <span class="self">self</span>.is_relay = <span class="bool-val">false</span>;
         <span class="kw">let </span>srx = <span class="self">self</span>.shutdown.clone();
         tokio::spawn({
             <span class="kw">let </span>this = <span class="self">self</span>.clone();
@@ -1131,11 +1217,10 @@
     }
 
     <span class="kw">pub fn </span>relay_server(
-        <span class="kw-2">mut </span><span class="self">self</span>,
+        <span class="self">self</span>,
         listener: TcpListener,
         tls: <span class="prelude-ty">Option</span>&lt;TlsIdentity&gt;,
     ) -&gt; eyre::Result&lt;<span class="kw">impl </span>std::future::Future&lt;Output = <span class="kw">crate</span>::Result&lt;()&gt;&gt;&gt; {
-        <span class="self">self</span>.is_relay = <span class="bool-val">true</span>;
         <span class="kw">let </span>srx = <span class="self">self</span>.shutdown.clone();
         tokio::spawn({
             <span class="kw">let </span>this = <span class="self">self</span>.clone();
@@ -1167,7 +1252,6 @@
         <span class="macro">tracing::debug!</span>(
             %resource_type,
             id = <span class="self">self</span>.config.identifier(),
-            is_relay = <span class="self">self</span>.is_relay,
             <span class="string">"pushing update"
         </span>);
         <span class="kw">crate</span>::metrics::actions_total(KIND_SERVER, <span class="string">"push"</span>).inc();
@@ -1209,7 +1293,6 @@
             id,
             client = node_id,
             count = <span class="self">self</span>.tx.receiver_count(),
-            is_relay = <span class="self">self</span>.is_relay,
             <span class="string">"subscribed to config updates"
         </span>);
 
@@ -1332,38 +1415,46 @@
         <span class="kw">let </span>stream = <span class="macro">async_stream::try_stream!</span> {
             <span class="kw">yield </span>response;
 
+            <span class="comment">// Buffer changes so we only propagate at a set and controlled interval. This reduces
+            // the network load when we have a high rate of change due to high cluster load.
+            </span><span class="kw">let </span>buffer = ResponseBroadcastPropagationBuffer::default();
+            <span class="kw">let </span><span class="kw-2">mut </span>lag_amount: u64 = <span class="number">0</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>propagation_interval = tokio::time::interval(RESPONSE_PROPAGATION_INTERVAL);
+            propagation_interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+
             <span class="kw">loop </span>{
                 <span class="macro">tokio::select!</span> {
-                    <span class="comment">// The resource(s) have changed, inform the connected client, but only
+                    <span class="comment">// Inform the connected client if any of the resources have changed, but only
                     // send the changed resources that the client doesn't already have
+                    </span><span class="kw">_ </span>= propagation_interval.tick() =&gt; {
+                        <span class="comment">// Fetch the changed resources
+                        </span><span class="kw">let </span><span class="kw-2">mut </span>resources = buffer.flush();
+                        <span class="comment">// If we've been lagging on updates, collect everything instead
+                        </span><span class="kw">if </span>lag_amount &gt; <span class="number">0 </span>{
+                            <span class="macro">tracing::warn!</span>(lag_amount, <span class="string">"lagged while receiving response broadcasts"</span>);
+                            resources = client_tracker.tracked_resources().collect();
+                        }
+                        lag_amount = <span class="number">0</span>;
+                        <span class="kw">for </span>rt <span class="kw">in </span>resources {
+                            <span class="kw">match </span>responder(<span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>rt, <span class="kw-2">&amp;mut </span>client_tracker) {
+                                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(res)) =&gt; <span class="kw">yield </span>res,
+                                <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {},
+                                <span class="prelude-val">Err</span>(error) =&gt; {
+                                    <span class="kw">crate</span>::metrics::errors_total(KIND_SERVER, <span class="string">"respond"</span>).inc();
+                                    <span class="macro">tracing::error!</span>(%error, <span class="string">"responder failed to generate response"</span>);
+                                    <span class="kw">continue</span>;
+                                }
+                            }
+                        }
+                    }
+                    <span class="comment">// A resource has changed, buffer it for propagation
                     </span>res = rx.recv() =&gt; {
-                        <span class="kw">match </span>res {
-                            <span class="prelude-val">Ok</span>(rt) =&gt; {
-                                <span class="kw">match </span>responder(<span class="prelude-val">None</span>, rt, <span class="kw-2">&amp;mut </span>client_tracker) {
-                                    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(res)) =&gt; <span class="kw">yield </span>res,
-                                    <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {}
-                                    <span class="prelude-val">Err</span>(error) =&gt; {
-                                        <span class="kw">crate</span>::metrics::errors_total(KIND_SERVER, <span class="string">"respond"</span>).inc();
-                                        <span class="macro">tracing::error!</span>(%error, <span class="string">"responder failed to generate response"</span>);
-                                        <span class="kw">continue</span>;
-                                    },
-                                }
-                            }
+                        <span class="kw">match </span>buffer.ingest(res) {
+                            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {},
                             <span class="prelude-val">Err</span>(tokio::sync::broadcast::error::RecvError::Closed) =&gt; <span class="kw">break</span>,
-                            <span class="prelude-val">Err</span>(tokio::sync::broadcast::error::RecvError::Lagged(<span class="kw">_</span>)) =&gt; {
-                                <span class="kw">let </span>tracked_resources: Vec&lt;<span class="kw">_</span>&gt; = client_tracker.tracked_resources().collect();
-                                <span class="kw">for </span>rt <span class="kw">in </span>tracked_resources {
-                                    <span class="kw">match </span>responder(<span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>rt, <span class="kw-2">&amp;mut </span>client_tracker) {
-                                        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(res)) =&gt; <span class="kw">yield </span>res,
-                                        <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {},
-                                        <span class="prelude-val">Err</span>(error) =&gt; {
-                                            <span class="kw">crate</span>::metrics::errors_total(KIND_SERVER, <span class="string">"respond"</span>).inc();
-                                            <span class="macro">tracing::error!</span>(%error, <span class="string">"responder failed to generate response"</span>);
-                                            <span class="kw">continue</span>;
-                                        }
-                                    }
-                                }
-                            }
+                            <span class="prelude-val">Err</span>(tokio::sync::broadcast::error::RecvError::Lagged(amount)) =&gt; {
+                                lag_amount += amount;
+                            },
                         }
                     }
                     client_request = streaming.next() =&gt; {
@@ -1540,8 +1631,7 @@
                     config.interested_resources(<span class="kw-2">&amp;</span>server_version).collect(),
                     <span class="kw-2">&amp;</span>local,
                 )
-                .<span class="kw">await
-                </span>.map_err(|error| tonic::Status::internal(error.to_string()))<span class="question-mark">?</span>;
+                .map_err(|error| tonic::Status::internal(error.to_string()))<span class="question-mark">?</span>;
 
                 <span class="kw">let </span><span class="kw-2">mut </span>response_stream = <span class="kw">crate</span>::config::handle_delta_discovery_responses(
                     identifier.clone(),
@@ -1561,7 +1651,8 @@
                             <span class="kw">match </span>nr {
                                 <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(ack))) =&gt; {
                                     <span class="macro">tracing::trace!</span>(<span class="string">"sending ack request"</span>);
-                                    ds.send_response(ack).<span class="kw">await</span>.map_err(|_err| {
+                                    ds.ack_response(ack).map_err(|_err| {
+                                        <span class="kw">crate</span>::metrics::errors_total(KIND_SERVER, <span class="string">"ack_failed"</span>).inc();
                                         tonic::Status::internal(<span class="string">"this should not be reachable"</span>)
                                     })<span class="question-mark">?</span>;
                                 }
@@ -1582,8 +1673,7 @@
                                         config.interested_resources(<span class="kw-2">&amp;</span>server_version).collect(),
                                         <span class="kw-2">&amp;</span>local,
                                     )
-                                    .<span class="kw">await
-                                    </span>.map_err(|error| tonic::Status::internal(error.to_string()))<span class="question-mark">?</span>;
+                                    .map_err(|error| tonic::Status::internal(error.to_string()))<span class="question-mark">?</span>;
                                 }
                             }
                         }
@@ -1596,8 +1686,6 @@
                 <span class="kw">if </span>res.is_ok() {
                     <span class="macro">tracing::info!</span>(<span class="string">"xds stream terminated"</span>);
                 }
-
-                local.clear(<span class="kw-2">&amp;</span>config, <span class="prelude-val">Some</span>(remote_addr));
 
                 res
             }
@@ -1632,7 +1720,6 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(tonic::Status::invalid_argument(<span class="string">"Node identifier required"</span>));
         };
 
-        <span class="kw">let </span>is_relay = <span class="self">self</span>.is_relay;
         <span class="kw">let </span><span class="kw-2">mut </span>rx = <span class="self">self</span>.tx.subscribe();
         <span class="kw">let </span>id = <span class="self">self</span>.config.identifier();
         <span class="kw">let </span><span class="kw-2">mut </span>shutdown = <span class="self">self</span>.shutdown.clone();
@@ -1641,7 +1728,6 @@
             id,
             client = node_id,
             count = <span class="self">self</span>.tx.receiver_count(),
-            is_relay,
             <span class="string">"subscribed to config updates"
         </span>);
 
@@ -1762,36 +1848,46 @@
         <span class="kw">let </span>stream = <span class="macro">async_stream::try_stream!</span> {
             <span class="kw">yield </span>response;
 
+            <span class="comment">// Buffer changes so we only propagate at a set and controlled interval. This reduces
+            // the network load when we have a high rate of change due to high cluster load.
+            </span><span class="kw">let </span>buffer = ResponseBroadcastPropagationBuffer::default();
+            <span class="kw">let </span><span class="kw-2">mut </span>lag_amount: u64 = <span class="number">0</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>propagation_interval = tokio::time::interval(RESPONSE_PROPAGATION_INTERVAL);
+            propagation_interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+
             <span class="kw">loop </span>{
                 <span class="macro">tokio::select!</span> {
-                    <span class="comment">// The resource(s) have changed, inform the connected client, but only
+                    <span class="comment">// Inform the connected client if any of the resources have changed, but only
                     // send the changed resources that the client doesn't already have
+                    </span><span class="kw">_ </span>= propagation_interval.tick() =&gt; {
+                        <span class="comment">// Fetch the changed resources
+                        </span><span class="kw">let </span><span class="kw-2">mut </span>resources = buffer.flush();
+                        <span class="comment">// If we've been lagging on updates, collect everything instead
+                        </span><span class="kw">if </span>lag_amount &gt; <span class="number">0 </span>{
+                            <span class="macro">tracing::warn!</span>(lag_amount, <span class="string">"lagged while receiving response broadcasts"</span>);
+                            resources = client_tracker.tracked_resources().collect();
+                        }
+                        lag_amount = <span class="number">0</span>;
+                        <span class="kw">for </span>rt <span class="kw">in </span>resources {
+                            <span class="kw">match </span>responder(<span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>rt, <span class="kw-2">&amp;mut </span>client_tracker) {
+                                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(res)) =&gt; <span class="kw">yield </span>res,
+                                <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {},
+                                <span class="prelude-val">Err</span>(error) =&gt; {
+                                    <span class="kw">crate</span>::metrics::errors_total(KIND_SERVER, <span class="string">"respond"</span>).inc();
+                                    <span class="macro">tracing::error!</span>(%error, <span class="string">"responder failed to generate response"</span>);
+                                    <span class="kw">continue</span>;
+                                }
+                            }
+                        }
+                    }
+                    <span class="comment">// A resource has changed, buffer it for propagation
                     </span>res = rx.recv() =&gt; {
-                        <span class="kw">match </span>res {
-                            <span class="prelude-val">Ok</span>(rt) =&gt; {
-                                <span class="kw">match </span>responder(<span class="prelude-val">None</span>, rt, <span class="kw-2">&amp;mut </span>client_tracker) {
-                                    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(res)) =&gt; <span class="kw">yield </span>res,
-                                    <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {}
-                                    <span class="prelude-val">Err</span>(error) =&gt; {
-                                        <span class="macro">tracing::error!</span>(%error, <span class="string">"responder failed to generate response"</span>);
-                                        <span class="kw">continue</span>;
-                                    },
-                                }
-                            }
+                        <span class="kw">match </span>buffer.ingest(res) {
+                            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {},
                             <span class="prelude-val">Err</span>(tokio::sync::broadcast::error::RecvError::Closed) =&gt; <span class="kw">break</span>,
-                            <span class="prelude-val">Err</span>(tokio::sync::broadcast::error::RecvError::Lagged(<span class="kw">_</span>)) =&gt; {
-                                <span class="kw">let </span>tracked_resources: Vec&lt;<span class="kw">_</span>&gt; = client_tracker.tracked_resources().collect();
-                                <span class="kw">for </span>rt <span class="kw">in </span>tracked_resources {
-                                    <span class="kw">match </span>responder(<span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>rt, <span class="kw-2">&amp;mut </span>client_tracker) {
-                                        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(res)) =&gt; <span class="kw">yield </span>res,
-                                        <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {},
-                                        <span class="prelude-val">Err</span>(error) =&gt; {
-                                            <span class="macro">tracing::error!</span>(%error, <span class="string">"responder failed to generate response"</span>);
-                                            <span class="kw">continue</span>;
-                                        }
-                                    }
-                                }
-                            }
+                            <span class="prelude-val">Err</span>(tokio::sync::broadcast::error::RecvError::Lagged(amount)) =&gt; {
+                                lag_amount += amount;
+                            },
                         }
                     }
                     client_request = requests.next() =&gt; {
