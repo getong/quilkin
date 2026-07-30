@@ -283,6 +283,12 @@ pub fn setup_xdp_io(config: XdpConfig<'_>) -> Result<XdpWorkers, XdpSetupError> 
     let ring_cfg = xdp::RingConfigBuilder::default().build()?;
     let workers = ebpf_prog.create_and_bind_sockets(nic_index, umem_cfg, &device_caps, ring_cfg)?;
 
+    tracing::info!(
+        nic = ?nic_index,
+        queue_count = workers.len(),
+        "XDP is running"
+    );
+
     Ok(XdpWorkers {
         ebpf_prog,
         workers,
