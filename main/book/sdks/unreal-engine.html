@@ -15,8 +15,8 @@
         <link rel="icon" href="../favicon-de23e50b.svg">
         <link rel="shortcut icon" href="../favicon-8114d1fc.png">
         <link rel="stylesheet" href="../css/variables-8adf115d.css">
-        <link rel="stylesheet" href="../css/general-0392ca55.css">
-        <link rel="stylesheet" href="../css/chrome-fc474251.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
         <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c89b6730.js";
+            window.path_to_searchindex_js = "../searchindex-db7a114a.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-270f104f.js"></script>
@@ -191,7 +191,7 @@
 <ul>
 <li><code>TArray&lt;FQuilkinEndpoint&gt; Endpoints</code> A set of Quilkin load balancer endpoints that can be used for the following features.</li>
 <li><code>bool MeasureEndpoints</code> When enabled, the plugin will start a new <code>Tick</code> task that executes at a fixed interval (currently 30 seconds), where it will spawn a new background task that will ping each endpoint in <code>Endpoints</code>, and track its measurement in a fixed size circular buffer.
-Pings are handled through Quilkin Control Message Protocol, this is a bespoke protocol for UDP to be able to support situations where for example using ICMP is not possible, see the <a href="https://googleforgames.github.io/quilkin/main/book/services/proxy/qcmp.html">Quilkin Book</a> for more details on the protocol data unit.
+Pings are handled through Quilkin Control Message Protocol, this is a bespoke protocol for UDP to be able to support situations where for example using ICMP is not possible, see the <a href="https://EmbarkStudios.github.io/quilkin/main/book/services/proxy/qcmp.html">Quilkin Book</a> for more details on the protocol data unit.
 <strong>Note</strong> <code>MeasureEndpoints</code> is orthogonal to <code>Enabled</code> and <code>UseEndpoints</code> meaning that you can use <code>MeasureEndpoints</code> for latency measurements without being required to also use Quilkin for game traffic.</li>
 <li><code>bool UseEndpoints</code> Whether to use <code>Endpoints</code> for game traffic. When enabled, instead of using the provided <code>FInternetAddr</code>, the plugin will choose the lowest latency endpoint available and send traffic through that endpoint to connect to the gameserver, and if the latency should exceed <code>JitterThreshold</code> then the plugin will attempt to redirect traffic to the next available endpoint with the lowest latency.</li>
 </ul>
@@ -254,7 +254,7 @@ Pings are handled through Quilkin Control Message Protocol, this is a bespoke pr
 
         <script src="../clipboard-1626706a.min.js"></script>
         <script src="../highlight-abc7f01d.js"></script>
-        <script src="../book-c22b7243.js"></script>
+        <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
         <script src="../mermaid-eefea253.min.js"></script>
