@@ -2,6 +2,119 @@
 
 # v0.10.0 (2026-04-30)
 
+## [0.11.0](https://github.com/getong/quilkin/compare/quilkin-v0.10.0...quilkin-v0.11.0) - 2026-08-09
+
+### Added
+
+- *(xdp)* query queue count dynamically from the system
+- *(pprof)* reduce frequency and add parameter
+- QuicDcid strategy for `quilkin.filters.capture.v1alpha1.Capture` filter ([#1419](https://github.com/getong/quilkin/pull/1419))
+- use wal normal mode ([#1425](https://github.com/getong/quilkin/pull/1425))
+- *(loadtest)* add corrosion provider loadtest ([#1417](https://github.com/getong/quilkin/pull/1417))
+- add udp benchmarks ([#1416](https://github.com/getong/quilkin/pull/1416))
+- [**breaking**] make UDP IO backend runtime configurable ([#1414](https://github.com/getong/quilkin/pull/1414))
+- recover from SQLITE_FULL errors ([#1407](https://github.com/getong/quilkin/pull/1407))
+- add db limit options, add checks for database at startup ([#1403](https://github.com/getong/quilkin/pull/1403))
+- arm image support ([#1404](https://github.com/getong/quilkin/pull/1404))
+- add http provider + provider benchmarks ([#1379](https://github.com/getong/quilkin/pull/1379))
+- Batch k8s events to prevent excessive calls to `EndpointSet::update()` ([#1370](https://github.com/getong/quilkin/pull/1370))
+- Initial corrosion integration ([#1348](https://github.com/getong/quilkin/pull/1348))
+- Add decryptor filter ([#1035](https://github.com/getong/quilkin/pull/1035))
+
+### Fixed
+
+- *(xdp)* reorder so program is attached before bind
+- *(xdp)* set user as root
+- *(admin)* add octet-stream content type to /debug/pprof/allocs
+- *(io)* count more errors in metrics
+- *(security)* update to 0.9.20 (RUSTSEC-2026-0204)
+- *(corrosion)* remove panic on connect_insecure call
+- agones tests running on GHA ([#1411](https://github.com/getong/quilkin/pull/1411))
+- compile errors in agones crate ([#1410](https://github.com/getong/quilkin/pull/1410))
+- add udp session limit to prevent unbounded growth ([#1396](https://github.com/getong/quilkin/pull/1396))
+- compose example
+- rustdoc errors & warnings
+- reject invalid ports ([#1372](https://github.com/getong/quilkin/pull/1372))
+- fix issue when watching multiple k8s namespaces ([#1369](https://github.com/getong/quilkin/pull/1369))
+- Change how latency to other nodes is measured ([#1364](https://github.com/getong/quilkin/pull/1364))
+
+### Other
+
+- *(xdp)* fix broken packet parsing, add fuzzing
+- *(xdp)* move ethtool types into xdp crate ([#1457](https://github.com/getong/quilkin/pull/1457))
+- *(xdp)* log queue count
+- *(xdp)* don't count EAGAIN as an error
+- *(xdp)* add detailed error reporting for permission denied
+- *(xdp)* log setup failure as warning
+- Requeue io-uring receives even if there is an error ([#1446](https://github.com/getong/quilkin/pull/1446))
+- chore(tests); fix flaky port reuse in test
+- *(udp)* log io backend
+- *(xds)* memoize cluster encodings
+- Increase ring buffer size ([#1444](https://github.com/getong/quilkin/pull/1444))
+- *(loadtest)* fix latency tests timing out
+- *(deps)* update spin to 0.10.1
+- *(agones)* remove intermiediate value deserialize
+- *(metrics)* prune cluster labels, bound write label discriminant
+- *(xdp)* evict old ASN entries
+- *(k8s)* don't leak tasks on retry
+- Update uhlc to remove defmt
+- Update to 1.97, fix lints
+- use weak reference in cleanup task
+- cargo fmt
+- *(corrosion)* remove dead code
+- *(corrosion)* dedup event processing into single fn
+- *(corrosion)* refactor backoff connect into single fn
+- perf(corrosion)): implement a batch pipeline for mutation stream
+- *(corrosion)* debounce push batching and bound the publish channel
+- *(corrosion)* make writes shutdown-safe, request-atomic, and recover from disk-full
+- *(rust)* update to 1.96.0 ([#1428](https://github.com/getong/quilkin/pull/1428))
+- Update the list of kernel versions we test against ([#1421](https://github.com/getong/quilkin/pull/1421))
+- remove proto-gen from Dockerfile ([#1415](https://github.com/getong/quilkin/pull/1415))
+- disable arm image for noew
+- Remove corro-agent ([#1408](https://github.com/getong/quilkin/pull/1408))
+- Update corrosion ([#1406](https://github.com/getong/quilkin/pull/1406))
+- release ([#1402](https://github.com/getong/quilkin/pull/1402))
+- set gitattributes to keep lf line endings ([#1401](https://github.com/getong/quilkin/pull/1401))
+- release v0.10.1 ([#1400](https://github.com/getong/quilkin/pull/1400))
+- googleforgames -> EmbarkStudios ([#1398](https://github.com/getong/quilkin/pull/1398))
+- *(deps)* bump openssl from 0.10.79 to 0.10.80 ([#1397](https://github.com/getong/quilkin/pull/1397))
+- remove .* from .gitignore, set version of corrosion dependency
+- Remove sub DB when streams are terminated ([#1393](https://github.com/getong/quilkin/pull/1393))
+- try explicit latest version
+- try setting workspace explicitly
+- set file protocol to allow in release-plz
+- *(deps)* bump openssl from 0.10.78 to 0.10.79 ([#1392](https://github.com/getong/quilkin/pull/1392))
+- rm benches from dockerignore
+- fix benches missing in dockerfile
+- Foward xDS events to corrosion ([#1376](https://github.com/getong/quilkin/pull/1376))
+- update UE5 plugin ([#1384](https://github.com/getong/quilkin/pull/1384))
+- update changelog for 0.10.0 ([#1385](https://github.com/getong/quilkin/pull/1385))
+- *(deps)* bump openssl from 0.10.75 to 0.10.78 ([#1382](https://github.com/getong/quilkin/pull/1382))
+- Bind corrosion client to unspecified address ([#1381](https://github.com/getong/quilkin/pull/1381))
+- Replace `cfg_if!` with `cfg_select!` ([#1380](https://github.com/getong/quilkin/pull/1380))
+- try git_only in release-plz.toml
+- add debug steps to release-plz.yaml
+- don't checkout submodules in release-plz.yaml
+- remove fetch-depth from release-plz.yaml
+- remove persist-credentials in release-plz.yaml
+- *(deps)* bump rustls-webpki from 0.103.8 to 0.103.10 ([#1375](https://github.com/getong/quilkin/pull/1375))
+- Support static provider with corrosion and enable running locally ([#1373](https://github.com/getong/quilkin/pull/1373))
+- Use Non Negative Least Squares for latency measurement ([#1367](https://github.com/getong/quilkin/pull/1367))
+- io-uring changes ([#1361](https://github.com/getong/quilkin/pull/1361))
+- Fix cpu profiling endpoint ([#1368](https://github.com/getong/quilkin/pull/1368))
+- Upgrade `kube` dep to 3.x ([#1360](https://github.com/getong/quilkin/pull/1360))
+- checkout submodules in image build ([#1366](https://github.com/getong/quilkin/pull/1366))
+- Fix `aarch64-linux-unknown-gnu` compilation ([#1365](https://github.com/getong/quilkin/pull/1365))
+- refactor dockerfile to use buildx actions and chef ([#1363](https://github.com/getong/quilkin/pull/1363))
+- Update `time` crate and workaround yq issue ([#1359](https://github.com/getong/quilkin/pull/1359))
+- Add quilkin_allocated_xdp_packets metric ([#1357](https://github.com/getong/quilkin/pull/1357))
+- Add test_success job ([#1355](https://github.com/getong/quilkin/pull/1355))
+- Don't stop admin server on graceful shutdown ([#1354](https://github.com/getong/quilkin/pull/1354))
+- Refactor documentation workflow to use mise action ([#1346](https://github.com/getong/quilkin/pull/1346))
+- fix mdbook build, refactor, layout, remove xDS references ([#1345](https://github.com/getong/quilkin/pull/1345))
+- set submodules true in checkout ([#1344](https://github.com/getong/quilkin/pull/1344))
+- set absolute path ([#1343](https://github.com/getong/quilkin/pull/1343))
+
 ## [0.10.1](https://github.com/EmbarkStudios/quilkin/compare/quilkin-v0.10.0...quilkin-v0.10.1) - 2026-05-26
 
 ### Added
