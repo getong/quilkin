@@ -95,10 +95,8 @@ impl CorrosionHandle {
             db.pool.clone(),
             subs.clone(),
             None,
-            db.bookie,
-            db.booked,
-            None,
-        );
+        )
+        .await?;
 
         let trip = Trip::new();
         let pubsub_ctx = PubsubContext {

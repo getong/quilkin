@@ -12,7 +12,7 @@ pub struct TestSubsDb {
     pub sub_path: camino::Utf8PathBuf,
     pub subs: pubsub::SubsManager,
     pub schema: Arc<types::schema::Schema>,
-    pub clock: corrosion::Clock,
+    pub clock: Arc<uhlc::HLC>,
     pub actor_id: ActorId,
     pub pool: types::agent::SplitPool,
     matcher_conns: std::collections::BTreeMap<uuid::Uuid, types::sqlite::CrConn>,
@@ -41,10 +41,9 @@ impl TestSubsDb {
             db.pool.clone(),
             subs.clone(),
             None,
-            db.bookie,
-            db.booked,
-            None,
-        );
+        )
+        .await
+        .expect("failed to create broadcaster");
 
         Self {
             temp,
