@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-db7a114a.js";
+            window.path_to_searchindex_js = "searchindex-7b17f11c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-270f104f.js"></script>
@@ -296,7 +296,10 @@ your local machine through <a href="#cargo">Cargo</a>.</p>
 
   
 <dd>
-<pre><code class="language-shell">docker pull ghcr.io/embarkstudios/quilkin:&lt;version&gt;-&lt;short_commit&gt;
+<pre><code class="language-shell"># A release.
+docker pull ghcr.io/embarkstudios/quilkin:&lt;version&gt;
+# A specific commit built from `main`.
+docker pull ghcr.io/embarkstudios/quilkin:&lt;short_commit&gt;
 </code></pre>
   </dd>
 
@@ -304,18 +307,20 @@ your local machine through <a href="#cargo">Cargo</a>.</p>
 <dt><strong>Notes</strong></dt>
 
   
-<dd>Pre-built Quilkin binary with no preset arguments</dd>
+<dd>Pre-built Quilkin binary with no preset arguments. Releases are tagged
+  <code>YYYY.M.PATCH</code> and <code>latest</code>; builds from <code>main</code> are tagged
+  with the commit's short SHA, such as <code>41673c8</code>.</dd>
 
 </dl>
 
-<h3 id="cargo"><a class="header" href="#cargo"><a href="https://lib.rs/crates/quilkin" data-proofer-ignore="">Cargo</a></a></h3>
+<h3 id="cargo"><a class="header" href="#cargo">Cargo</a></h3>
 <dl>
   
 <dt><strong>Source / Method</strong></dt>
 
   
 <dd>
-<pre><code>cargo install quilkin
+<pre><code>cargo install --git https://github.com/EmbarkStudios/quilkin --tag v&lt;version&gt; quilkin
 </code></pre>
   </dd>
 
@@ -323,25 +328,8 @@ your local machine through <a href="#cargo">Cargo</a>.</p>
 <dt><strong>Notes</strong></dt>
 
   
-<dd>Compiled from source using cargo</dd>
-
-</dl>
-
-<h3 id="github"><a class="header" href="#github"><a href="https://github.com/EmbarkStudios/quilkin">GitHub</a></a></h3>
-<dl>
-  
-<dt><strong>Source / Method</strong></dt>
-
-  
-<dd>
-<p><a href="https://github.com/EmbarkStudios/quilkin/releases">GitHub Releases</a></p>
-  </dd>
-
-  
-<dt><strong>Notes</strong></dt>
-
-  
-<dd>Pre-built binaries for manual installation</dd>
+<dd>Compiled from source using cargo. Quilkin is not published to crates.io,
+  so this installs from the Git tag.</dd>
 
 </dl>
 
@@ -355,8 +343,11 @@ change depending on the underlying hardware, number of filters, configurations a
 workload and configuration as close as possible.</p>
 <p>We are always investigating further performance improvements in upcoming releases, both from an optimisation and observability perspective as well.</p>
 <h2 id="can-i-integrate-quilkin-with-c-code"><a class="header" href="#can-i-integrate-quilkin-with-c-code">Can I integrate Quilkin with C++ code?</a></h2>
-<p>Quilkin is also released as a <a href="https://crates.io/crates/quilkin" data-proofer-ignore="">library</a> so it can be
-integrated with an external codebase as necessary.</p>
+<p>Quilkin is also a library, so it can be integrated with an external codebase as necessary. It is not
+published to crates.io — its Rust API is not a stable interface and may change in any release — so depend
+on it from Git, pinned to a tag:</p>
+<pre><code class="language-toml">quilkin = { git = "https://github.com/EmbarkStudios/quilkin", tag = "v2026.10.0" }
+</code></pre>
 <p>Using Rust code inside a C or C++ project mostly consists of two parts.</p>
 <ul>
 <li>Creating a C-friendly API in Rust</li>
@@ -1107,6 +1098,17 @@ more accurately represent the location of any datacentre.</p>
 request to the QCMP port.</p>
 <p>The returned data is a JSON object with each key being the ICAO code for the
 datacentre, and the value being the latency in nanoseconds.</p>
+<h3 id="network-coordinates"><a class="header" href="#network-coordinates">Network coordinates</a></h3>
+<p><code>GET /network-coordinates</code> returns each datacentre’s coordinate, keyed by ICAO
+code: <code>incoming</code> for the path towards it, <code>outgoing</code> for the path back.</p>
+<p>The <code>X-Api-Version</code> header, a <code>YYYY-MM-DD</code> date, selects the shape. On or after
+<code>2026-10-15</code>, one array per direction with an element per dimension:</p>
+<pre><code class="language-json">{ "ESSA": { "incoming": [1250000.0], "outgoing": [1310000.0] } }
+</code></pre>
+<p>Otherwise each direction is that array’s Euclidean norm, which is the element
+itself while the space has one dimension:</p>
+<pre><code class="language-json">{ "ESSA": { "incoming": 1250000.0, "outgoing": 1310000.0 } }
+</code></pre>
 <h2 id="metrics"><a class="header" href="#metrics">Metrics</a></h2>
 <ul>
 <li>
@@ -1120,6 +1122,45 @@ datacentre, and the value being the latency in nanoseconds.</p>
 <li>
 <p><code>quilkin_phoenix_server_errors</code></p>
 <p>The amount of errors attempting to spawn the phoenix HTTP server</p>
+</li>
+<li>
+<p><code>quilkin_phoenix_measurement_seconds{icao, direction}</code> (Histogram)</p>
+<p>The distribution of accepted latency measurements per datacentre.</p>
+<ul>
+<li>The <code>direction</code> label is the leg of the round trip: <code>incoming</code> is proxy to
+datacentre, <code>outgoing</code> is datacentre back to proxy.</li>
+</ul>
+</li>
+<li>
+<p><code>quilkin_phoenix_measurement_errors_total{icao}</code> (Counter)</p>
+<p>The total number of measurements that yielded no usable value, whether the peer
+failed to answer or answered implausibly. Each one raises the node’s error
+estimate, making it less likely to be picked.</p>
+</li>
+<li>
+<p><code>quilkin_phoenix_measurements_rejected_total{icao, direction, reason}</code> (Counter)</p>
+<p>The total number of measurements discarded because the reply’s timestamps don’t
+describe a network path. Implausible measurements are discarded rather than
+clamped, as one corrupts the histogram’s <code>_sum</code> permanently and wrecks the
+coordinate solve.</p>
+<p>This is the subset of <code>quilkin_phoenix_measurement_errors_total</code> the peer did
+answer, so a wrong clock is distinguishable from an unreachable datacentre.</p>
+<ul>
+<li>The <code>reason</code> label is a closed set:
+<ul>
+<li><code>negative</code>: the leg came out below zero, ie the timestamp it derives from is ahead of the clock that read it.</li>
+<li><code>too_large</code>: the leg came out longer than any network path produces, ie a zero or badly skewed peer timestamp.</li>
+</ul>
+</li>
+<li>The <code>direction</code> label is the leg that failed, named as in
+<code>quilkin_phoenix_measurement_seconds</code>. Both legs cross the two clocks, so
+skew pushes one out of range and the other towards zero; only the failing
+leg is counted, so the counter equals the measurements discarded.</li>
+</ul>
+<p>Clock skew shows up as a single <code>icao</code>, which is what separates it from a
+network problem:</p>
+<pre><code class="language-promql">sum by (icao) (rate(quilkin_phoenix_measurements_rejected_total[5m]))
+</code></pre>
 </li>
 <li>
 <p><code>quilkin_service_qcmp_active</code></p>
@@ -2100,8 +2141,9 @@ properties:
 <p>The following are metrics that Quilkin provides while in Proxy Mode.</p>
 <h1 id="asn-maxmind-information"><a class="header" href="#asn-maxmind-information">ASN Maxmind Information</a></h1>
 <p>If Quilkin is provided a a MaxmindDB GeoIP database, Quilkin will log the
-following information in the <code>maxmind information</code> log, as well as populate
-the following fields in any metrics with matching labels.</p>
+following information in the <code>maxmind information</code> log. Only <code>country_code</code>, on
+<code>quilkin_session_active</code>, and <code>asn</code>, on the connection quality metrics below, are
+exported as labels; the rest are too high in cardinality to be.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -2137,15 +2179,28 @@ by default with Quilkin.</p>
 </ul>
 </li>
 <li>
-<p><code>quilkin_packets_dropped_total{reason, asn, ip_prefix}</code> (Counter)</p>
-<p>The total number of packets (not associated with any session) that were dropped by proxy.
-Not that packets reflected by this metric were dropped at an earlier stage before they were associated with any session. For session based metrics, see the list of <a href="#session-metrics">session metrics</a> instead.</p>
+<p><code>quilkin_packets_dropped_total{event, reason, filter, destination}</code> (Counter)</p>
+<p>The total number of packets that were dropped by the proxy.</p>
 <ul>
-<li><code>reason = NoConfiguredEndpoints</code>
+<li>The <code>reason</code> label is a closed set, so a breakdown built on it survives a
+filter being renamed or an <code>errno</code> producing different text:
 <ul>
-<li><code>NoConfiguredEndpoints</code>: No upstream endpoints were available to send the packet to. This can occur e.g if the endpoints cluster was scaled down to zero and the proxy is configured via a control plane.</li>
+<li><code>no_endpoint_match</code>: no upstream endpoint was available, or none matched the packet’s routing token.</li>
+<li><code>filter_drop</code>: a filter chose to drop the packet, ie the chain worked as configured.</li>
+<li><code>filter_error</code>: a filter failed to process the packet.</li>
+<li><code>socket_error</code>: the socket refused the packet, or the packet couldn’t be built for it.</li>
+<li><code>queue_full</code>: a send or receive queue was full.</li>
+<li><code>invalid_packet</code>: the packet couldn’t be parsed as a datagram Quilkin handles. The specific parse failure is logged rather than labelled.</li>
+<li><code>session_limit</code>: the session limit was reached, so no session could be established.</li>
+<li><code>internal</code>: Quilkin lost track of state it needed to forward the packet.</li>
+<li><code>no_filter_chain</code>: the proxy hasn’t received its filter chain from the management server yet.</li>
 </ul>
 </li>
+<li>The <code>filter</code> label is the filter responsible, and is empty when the drop
+wasn’t a filter’s decision.</li>
+<li>The <code>destination</code> label is described under
+<a href="#general-metrics"><code>quilkin_bytes_total</code></a>, and is empty for packets dropped
+before they were routed.</li>
 </ul>
 </li>
 <li>
@@ -2158,36 +2213,55 @@ Not that packets reflected by this metric were dropped at an earlier stage befor
 knows of rather than those that it is connected to (see <a href="#session-metrics">Session Metrics</a> instead for those)</p>
 </li>
 <li>
-<p><code>quilkin_bytes_total{event, asn, ip_prefix}</code></p>
+<p><code>quilkin_bytes_total{event, destination}</code></p>
 <p>The total number of bytes sent or received</p>
 <ul>
-<li>The <code>event</code> label is either:
+<li>
+<p>The <code>event</code> label is either:</p>
 <ul>
 <li><code>read</code>: when the proxy receives data from a downstream connection on the listening port.</li>
 <li><code>write</code>: when the proxy sends data to a downstream connection via the listening port.</li>
 </ul>
 </li>
+<li>
+<p>The <code>destination</code> label is the cluster the packet was routed to, so traffic
+can be attributed to a gameserver fleet rather than only counted in aggregate.
+It carries the same values as <code>quilkin_active_endpoints</code>, so the two can be
+joined.</p>
+<p>The cluster comes from the routing decision itself, not from looking the
+address up afterwards, so it is the cluster the packet actually went through
+even when the same endpoint is configured in more than one. It is empty when
+the destination didn’t come from a cluster with a locality, which includes
+destinations a filter decoded from the packet rather than selecting from the
+cluster map. Note that <code>event=write</code> traffic carries the cluster of the
+gameserver that sent it, not of the client it is going to.</p>
+</li>
 </ul>
 </li>
 <li>
-<p><code>quilkin_packets_total{event, asn, ip_prefix}</code></p>
+<p><code>quilkin_packets_total{event, destination}</code></p>
 <p>The total number of packets sent or recieved.</p>
 <ul>
-<li>The <code>event</code> label is either:
-<ul>
-<li><code>read</code>: when the proxy receives data from a downstream connection on the listening port.</li>
-<li><code>write</code>: when the proxy sends data to a downstream connection via the listening port.</li>
-</ul>
-</li>
+<li>The labels are the same as <a href="#general-metrics"><code>quilkin_bytes_total</code></a>.</li>
 </ul>
 </li>
 <li>
-<p><code>quilkin_packet_jitter{event, asn, ip_prefix}</code></p>
-<p>The time between receiving new packets (in nanoseconds).</p>
+<p><code>quilkin_packet_jitter{event}</code></p>
+<p>The time between packets arriving at an I/O loop (in nanoseconds). This covers
+every session the loop serves, so it is a whole-proxy figure; for the
+distribution across players use <code>quilkin_session_jitter_seconds</code>.</p>
+<p>The series stops being exported when no packet arrived during an aggregation
+interval, rather than continuing to publish the last value the proxy saw.</p>
 </li>
 <li>
-<p><code>quilkin_errors_total{event, asn, ip_prefix}</code></p>
+<p><code>quilkin_errors_total{event, reason}</code></p>
 <p>The total number of errors encountered while reading a packet from the upstream endpoint.</p>
+<ul>
+<li>The <code>reason</code> label is a closed set, replacing the previous free-text <code>display</code>
+label. For I/O errors it names the <code>errno</code>, eg <code>invalid_input</code>,
+<code>no_buffer_space</code> or <code>message_too_long</code>, rather than interpolating the
+platform’s error string.</li>
+</ul>
 </li>
 <li>
 <p><code>quilkin_game_traffic_tasks</code></p>
@@ -2218,6 +2292,84 @@ client.</li>
 <li>
 <p><code>quilkin_session_total</code> (Counter)</p>
 <p>The total number of sessions that have been created.</p>
+</li>
+<li>
+<p><code>quilkin_sessions_closed_total{reason}</code> (Counter)</p>
+<p>The total number of sessions that have ended, by why they ended. A fall in
+session count otherwise looks the same whether players left or their endpoints
+vanished.</p>
+<ul>
+<li><code>idle_timeout</code>: no traffic within the session TTL. UDP has no close, so this
+is what a player leaving normally looks like.</li>
+<li><code>endpoint_gone</code>: the endpoint the session was routed to is no longer in the
+cluster map. Only reported for destinations that were in the cluster map when
+the session was created, so an endpoint configured by name is never
+misattributed here.</li>
+<li><code>shutdown</code>: the proxy is shutting down.</li>
+</ul>
+</li>
+</ul>
+<h2 id="connection-quality-metrics"><a class="header" href="#connection-quality-metrics">Connection Quality Metrics</a></h2>
+<p>A player’s jitter and their ISP are per-player facts, so neither can be a metric
+label: concurrent sessions and the thousands of ASNs seen in a day of traffic both
+blow up cardinality. Instead the proxy tracks quality per session internally and
+periodically exports a projection whose series count is bounded by configuration
+rather than by traffic. See the <code>--service.udp.metrics.*</code> options for the
+tunables.</p>
+<p>Note the division of labour. Whether an individual <em>session</em> is having a bad time
+is a judgement the proxy makes, because it is the only thing holding that
+session’s packet timing. Whether an <em>ISP</em> is having a bad time is left to the
+consumer of these metrics: a proxy carries on the order of a hundred concurrent
+sessions spread over thousands of ASNs, so no single one sees enough of any ASN to
+threshold on. The proxy exports the numerator and the denominator per ASN and
+expects them to be summed across the fleet before any conclusion is drawn.</p>
+<p>Interarrival jitter is measured against a monotonic clock, and gaps longer than a
+second are treated as the stream restarting rather than as jitter, so a player
+pausing doesn’t register as a player with a bad connection.</p>
+<p>Sessions the proxy saw no traffic for during an interval are counted, but
+contribute no quality judgement.</p>
+<ul>
+<li>
+<p><code>quilkin_session_jitter_seconds</code> (Histogram)</p>
+<p>The distribution of per-session interarrival jitter of downstream packets, as
+the RFC 3550 estimator. A histogram rather than a mean, because a mean of 0.5 ms
+is compatible with a few percent of players at 80 ms, and those are the players
+worth knowing about — <code>histogram_quantile</code> over this answers “what does the 99th
+percentile player at this proxy see”.</p>
+<p>Only jitter is exported per session. Loss and round-trip time on the client’s
+leg need either packet sequence numbers or a client-side timestamp, and the
+proxy has neither.</p>
+</li>
+<li>
+<p><code>quilkin_sessions_active_by_asn{asn}</code> (Gauge)</p>
+<p>Active sessions by the client’s ASN, for the largest
+<code>--service.udp.metrics.top-asns</code> ASNs at this proxy, and the denominator for the
+metric below.</p>
+<p>Sessions belonging to any other ASN are counted under <code>asn="other"</code>, so the
+breakdown always sums to the session total. Sessions whose client IP resolved to
+no ASN are counted under <code>asn="unknown"</code>. Setting <code>--top-asns</code> to 0 disables
+per-ASN reporting entirely.</p>
+</li>
+<li>
+<p><code>quilkin_client_sessions_degraded{asn, reason}</code> (Gauge)</p>
+<p>The number of sessions breaching a quality threshold, by the client’s ASN. Only
+ASNs currently breaching are exported, so a healthy proxy publishes nothing
+here and the series count follows the number of ISPs actually in trouble.</p>
+<ul>
+<li><code>reason = jitter</code>: sessions at or above <code>--service.udp.metrics.jitter-threshold-ms</code>.</li>
+</ul>
+<p>This is a count, not a verdict. For the affected share of an ISP, divide by
+<code>quilkin_sessions_active_by_asn</code> — summing both across proxies first, since one
+proxy’s view of a single ASN is too small a sample to threshold on:</p>
+<pre><code class="language-promql">sum by (asn) (quilkin_client_sessions_degraded{reason="jitter"})
+  / sum by (asn) (quilkin_sessions_active_by_asn)
+</code></pre>
+</li>
+<li>
+<p><code>quilkin_client_sessions_degraded_total{reason}</code> (Counter)</p>
+<p>The total number of times a session was observed breaching a threshold, for
+alerting on a rate without depending on a share the proxy would have to pick a
+cut-off for.</p>
 </li>
 </ul>
 <h2 id="filter-metrics"><a class="header" href="#filter-metrics">Filter Metrics</a></h2>

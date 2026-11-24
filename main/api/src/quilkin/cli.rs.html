@@ -270,7 +270,7 @@
 <a href=#270 id=270 data-nosnippet>270</a>        config.read_config(<span class="kw-2">&amp;</span><span class="self">self</span>.config, locality.clone())<span class="question-mark">?</span>;
 <a href=#271 id=271 data-nosnippet>271</a>
 <a href=#272 id=272 data-nosnippet>272</a>        <span class="kw">crate</span>::metrics::with_mut_registry(|<span class="kw-2">mut </span>registry| {
-<a href=#273 id=273 data-nosnippet>273</a>            <span class="kw">crate</span>::metrics::register_metrics(<span class="kw-2">&amp;mut </span>registry, config.id());
+<a href=#273 id=273 data-nosnippet>273</a>            <span class="kw">crate</span>::metrics::register_metrics(<span class="kw-2">&amp;mut </span>registry, config.id(), locality.as_ref());
 <a href=#274 id=274 data-nosnippet>274</a>        });
 <a href=#275 id=275 data-nosnippet>275</a>
 <a href=#276 id=276 data-nosnippet>276</a>        <span class="kw">let </span>ready = Arc::&lt;std::sync::atomic::AtomicBool&gt;::default();
@@ -297,7 +297,7 @@
 <a href=#297 id=297 data-nosnippet>297</a>            locality.clone(),
 <a href=#298 id=298 data-nosnippet>298</a>            <span class="prelude-val">None</span>,
 <a href=#299 id=299 data-nosnippet>299</a>            shutdown_handler.shutdown_rx(),
-<a href=#300 id=300 data-nosnippet>300</a>        );
+<a href=#300 id=300 data-nosnippet>300</a>        )<span class="question-mark">?</span>;
 <a href=#301 id=301 data-nosnippet>301</a>
 <a href=#302 id=302 data-nosnippet>302</a>        <span class="kw">let </span>shutdown_tx = shutdown_handler.shutdown_tx();
 <a href=#303 id=303 data-nosnippet>303</a>        <span class="kw">let </span>(<span class="kw-2">mut </span>service_task, <span class="kw">_</span>) = <span class="self">self
